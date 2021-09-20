@@ -30,6 +30,14 @@ class CS:
         return n
         #return math.factorial(self.caras() - 1)/(math.factorial(dimensionDada)*math.factorial(self.caras()-dimensionDada -1))
         
+    def estrella(self):
+
+        return 0
+
+    def link(self):
+
+        return 0
+    
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
 simplice_prueba.añadir(["2"])
@@ -44,4 +52,6 @@ simplice_prueba.añadir(["1", "2", "3"])
 simplice_prueba.añadir(["1", "4", "3"])
 print(simplice_prueba.dimension())
 print(simplice_prueba.caras())
+print(simplice_prueba.carasDim(1))
 print(simplice_prueba.carasDim(2))
+print(simplice_prueba.carasDim(3))
