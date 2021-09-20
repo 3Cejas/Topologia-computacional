@@ -23,6 +23,12 @@ class CS:
 
     def carasDim(self,dimensionDada):
         #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
+        n=0
+        for i in self.index:
+            if (len(i) == dimensionDada):
+                n = n+1
+        return n
+        #return math.factorial(self.caras() - 1)/(math.factorial(dimensionDada)*math.factorial(self.caras()-dimensionDada -1))
         
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
@@ -38,3 +44,4 @@ simplice_prueba.añadir(["1", "2", "3"])
 simplice_prueba.añadir(["1", "4", "3"])
 print(simplice_prueba.dimension())
 print(simplice_prueba.caras())
+print(simplice_prueba.carasDim(2))
