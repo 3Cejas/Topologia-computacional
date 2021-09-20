@@ -13,6 +13,9 @@ class CS:
             if (len(i) > max):
                 max = len(i)
         return max
+    def caras(self):
+        numero = self.dimension
+        return 2^(numero+1)-1
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
 simplice_prueba.añadir(["2"])
