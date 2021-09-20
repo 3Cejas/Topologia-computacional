@@ -14,8 +14,11 @@ class CS:
                 max = len(i)
         return max
     def caras(self):
-        numero = self.dimension
-        return 2^(numero+1)-1
+        return 2^(self.dimension()+1)-1
+    
+    def carasDim(self,dimensionDada):
+        #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
+        
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
 simplice_prueba.añadir(["2"])
