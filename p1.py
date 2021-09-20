@@ -1,3 +1,4 @@
+import math
 
 class CS:
     def __init__(self):
