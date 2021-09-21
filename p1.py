@@ -66,7 +66,7 @@ class CS:
         estrella = self.estrella(elem)
         res=[]
         for lst in estrella_cerrada:
-            if lst in estrella:
+            if lst not in estrella:
                 res.append(lst)
         return res
     
