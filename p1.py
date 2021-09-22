@@ -13,7 +13,7 @@ class CS:
         for i in self.index:
             if (len(i) > max):
                 max = len(i)
-        return max
+        return max - 1
     
     #def caras(self):
         num = 0
