@@ -37,7 +37,7 @@ class CS:
         #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
         caras = []
         for i in self.index:
-            if (len(i) == dimensionDada):
+            if (len(i) == dimensionDada + 1):
                 caras.append(i)
         return caras
 
@@ -81,7 +81,7 @@ simplice_prueba.añadir(["1", "4"])
 simplice_prueba.añadir(["3", "4"])
 simplice_prueba.añadir(["2", "3"])
 simplice_prueba.añadir(["1", "2", "3"])
-simplice_prueba.añadir(["1", "4", "3"])
+simplice_prueba.añadir(["1", "3", "4"])
 
 #
 #simplice_prueba.añadir([(1)])
@@ -99,6 +99,7 @@ simplice_prueba.añadir(["1", "4", "3"])
 #print(simplice_prueba.index)
 #print(simplice_prueba.dimension())
 #print(simplice_prueba.caras())
+#print(simplice_prueba.carasDim(0))
 #print(simplice_prueba.carasDim(1))
 #print(simplice_prueba.carasDim(2))
 #print(simplice_prueba.carasDim(3))
