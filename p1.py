@@ -61,6 +61,7 @@ class CS:
                 nueva_sum.append(elem)
         k = nueva_sum
         return sorted(k, key=len)
+    
     def link(self, elem):
         estrella_cerrada =self.estrella_cerrada(elem)
         estrella = self.estrella(elem)
@@ -69,6 +70,17 @@ class CS:
             if lst not in estrella:
                 res.append(lst)
         return res
+    
+    def cEuler(self):
+        i=0
+        caracteristica=0
+        while i <= self.dimension():
+            cont=0
+            for j in self.carasDim(i):
+                cont=cont+1
+            caracteristica=caracteristica + cont*(-1)**i
+            i=i+1
+        return caracteristica
     
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
@@ -107,3 +119,4 @@ simplice_prueba.añadir(["1", "3", "4"])
 print(simplice_prueba.estrella("1"))
 print(simplice_prueba.estrella_cerrada("1"))
 print(simplice_prueba.link("1"))
+print(simplice_prueba.cEuler())
