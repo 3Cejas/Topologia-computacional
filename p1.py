@@ -61,7 +61,7 @@ class CS:
                 nueva_sum.append(elem)
         k = nueva_sum
         return sorted(k, key=len)
-    
+
     def link(self, elem):
         estrella_cerrada =self.estrella_cerrada(elem)
         estrella = self.estrella(elem)
@@ -70,17 +70,24 @@ class CS:
             if lst not in estrella:
                 res.append(lst)
         return res
-    
+
     def cEuler(self):
-        i=0
-        caracteristica=0
+        i = 0
+        caracteristica = 0
         while i <= self.dimension():
-            cont=0
+            cont = 0
             for j in self.carasDim(i):
-                cont=cont+1
-            caracteristica=caracteristica + cont*(-1)**i
-            i=i+1
+                cont = cont + 1
+            caracteristica = caracteristica + cont*(-1)**i
+            i = i + 1
         return caracteristica
+
+    def nConexo(self):
+        if self.dimension() == -1:
+            return 0
+        n = 1
+
+        return n
     
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
@@ -94,6 +101,7 @@ simplice_prueba.añadir(["3", "4"])
 simplice_prueba.añadir(["2", "3"])
 simplice_prueba.añadir(["1", "2", "3"])
 simplice_prueba.añadir(["1", "3", "4"])
+simplice_prueba2 = CS()
 
 #
 #simplice_prueba.añadir([(1)])
@@ -109,14 +117,17 @@ simplice_prueba.añadir(["1", "3", "4"])
 #simplice_prueba.añadir([(1, 3, 4)])
 #
 #print(simplice_prueba.index)
-#print(simplice_prueba.dimension())
+print(simplice_prueba.dimension())
 #print(simplice_prueba.caras())
-#print(simplice_prueba.carasDim(0))
-#print(simplice_prueba.carasDim(1))
-#print(simplice_prueba.carasDim(2))
-#print(simplice_prueba.carasDim(3))
+print(simplice_prueba.carasDim(0))
+print(simplice_prueba.carasDim(1))
+print(simplice_prueba.carasDim(2))
+print(simplice_prueba.carasDim(3))
 
 print(simplice_prueba.estrella("1"))
 print(simplice_prueba.estrella_cerrada("1"))
 print(simplice_prueba.link("1"))
 print(simplice_prueba.cEuler())
+print(simplice_prueba.nConexo())
+print(simplice_prueba2.nConexo())
+print(simplice_prueba2.dimension())
