@@ -1,4 +1,5 @@
 import math
+from typing import no_type_check
 
 class CS:
     def __init__(self):
@@ -83,10 +84,18 @@ class CS:
         return caracteristica
 
     def nConexo(self):
+        n = 0
         if self.dimension() == -1:
             return 0
-        n = 1
+        elif self.carasDim(1) == []:
+            for k in self.caras():
+                n=n+1
+            return n
 
+        n = 1
+        for j in self.carasDim(1):
+            #Falta hacer aquí el algoritmo de visitación de vértices
+            n=1
         return n
     
 simplice_prueba = CS()
@@ -102,7 +111,11 @@ simplice_prueba.añadir(["2", "3"])
 simplice_prueba.añadir(["1", "2", "3"])
 simplice_prueba.añadir(["1", "3", "4"])
 simplice_prueba2 = CS()
-
+simplice_prueba3 = CS()
+simplice_prueba3.añadir(["1"])
+simplice_prueba3.añadir(["2"])
+simplice_prueba3.añadir(["3"])
+simplice_prueba3.añadir(["4"])
 #
 #simplice_prueba.añadir([(1)])
 #simplice_prueba.añadir([(2)])
@@ -130,4 +143,5 @@ print(simplice_prueba.link("1"))
 print(simplice_prueba.cEuler())
 print(simplice_prueba.nConexo())
 print(simplice_prueba2.nConexo())
-print(simplice_prueba2.dimension())
+print(simplice_prueba3.nConexo())
+
