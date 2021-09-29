@@ -25,14 +25,10 @@ class CS:
         res = []
         for lista in self.index:
             res.append(lista[0])
-            print(len(lista[0])-1)
             for i in reversed(range(len(lista[0]))):
                 for j in combinaciones(lista[0], i):
-                    print(lista[0])
-                    print("aqui",j)
                     res.append(tuple(j))
         res = [x for x in res if x]
-        print(res)
         result = []
         for elem in res:
             if elem not in result:
@@ -105,13 +101,42 @@ class CS:
             for k in self.caras():
                 n=n+1
             return n
+        n = 0
+        aristas =self.carasDim(1)
+        vertices = [item for t in (self.carasDim(0)) for item in t]
+        actual = vertices[0]
+        adyacencia = dict.fromkeys(vertices,[])
+        print("inicio",adyacencia)
+        indice = 0
+        for vertice in vertices:
+            almacenador = []
+            for tuples in aristas:
+                print("mi vértice actual es:", vertice, "la arista actual es:", tuples)
 
-        n = 1
-        for j in self.carasDim(1):
-            #Falta hacer aquí el algoritmo de visitación de vértices
-            n=1
+                if vertice == tuples[0]:
+                    almacenador.append(tuples[1])
+                if vertice == tuples[1]:
+                    almacenador.append(tuples[0])
+            adyacencia[vertice] = almacenador
+        
+        visited = set()
+        c_conexas = []
+        print("Following is the Depth-First Search")
+        print(adyacencia)
+        for vertice in vertices:
+            dfs(visited, adyacencia, vertice)
+            if not(list(visited) in c_conexas): 
+                c_conexas.append(list(visited))
+                n = n+1
+        print("como")
         return n
 
+def dfs(visited, graph, node):  #function for dfs 
+    if node not in visited:
+        print (node)
+        visited.add(node)
+        for neighbour in graph[node]:
+            dfs(visited, graph, neighbour)
 def potencia(c):
     """Calcula y devuelve el conjunto potencia del 
        conjunto c.
@@ -178,10 +203,16 @@ print(simplice_prueba2.nConexo())
 print(simplice_prueba3.nConexo())
 '''
 simplice_prueba4 = CS()
-simplice_prueba4.añadir([("0", "1", "2", "3")])
-print(simplice_prueba4.caras())
-print(simplice_prueba4.carasDim(0))
- 
+simplice_prueba4.añadir([("0",)])
+simplice_prueba4.añadir([("1",)])
+simplice_prueba4.añadir([("2", "3")])
+simplice_prueba4.añadir([("4", "5")])
+simplice_prueba4.añadir([("5", "6")])
+simplice_prueba4.añadir([("4", "6")])
+simplice_prueba4.añadir([("6", "7", "8", "9")])
+#print(simplice_prueba4.caras())
+print(simplice_prueba4.carasDim(1))
+print(simplice_prueba4.nConexo()) 
 simplice_prueba5 = CS()
 simplice_prueba5.añadir([("0", "1")])
 simplice_prueba5.añadir([("1", "2", "3", "4")])
