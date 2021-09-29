@@ -1,6 +1,5 @@
 import math
 from typing import no_type_check
-
 class CS:
     def __init__(self):
         self.index = []
@@ -23,7 +22,22 @@ class CS:
         return num
     
     def caras(self):
-        return self.index
+        res = []
+        for lista in self.index:
+            res.append(lista[0])
+            print(len(lista[0])-1)
+            for i in reversed(range(len(lista[0]))):
+                for j in combinaciones(lista[0], i):
+                    print(lista[0])
+                    print("aqui",j)
+                    res.append(tuple(j))
+        res = [x for x in res if x]
+        print(res)
+        result = []
+        for elem in res:
+            if elem not in result:
+                result.append(elem)
+        return sorted(result, key=len)
 
     #def carasDim(self,dimensionDada):
         #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
@@ -37,13 +51,13 @@ class CS:
     def carasDim(self,dimensionDada):
         #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
         caras = []
-        for i in self.index:
+        for i in self.caras():
             if (len(i) == dimensionDada + 1):
                 caras.append(i)
         return caras
 
     def estrella(self, elem):
-        caras = self.index
+        caras = self.caras
         cocaras = []
         for i in caras:
             for j in i:
@@ -97,7 +111,24 @@ class CS:
             #Falta hacer aquí el algoritmo de visitación de vértices
             n=1
         return n
-    
+
+def potencia(c):
+    """Calcula y devuelve el conjunto potencia del 
+       conjunto c.
+    """
+    if len(c) == 0:
+        return [[]]
+    r = potencia(c[:-1])
+    return r + [s + [c[-1]] for s in r]
+
+def combinaciones(c, n):
+    """Calcula y devuelve una lista con todas las
+       combinaciones posibles que se pueden hacer
+       con los elementos contenidos en c tomando n
+       elementos a la vez.
+    """
+    return (s for s in potencia(c) if len(s) == n)
+''' 
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
 simplice_prueba.añadir(["2"])
@@ -116,6 +147,7 @@ simplice_prueba3.añadir(["1"])
 simplice_prueba3.añadir(["2"])
 simplice_prueba3.añadir(["3"])
 simplice_prueba3.añadir(["4"])
+'''
 #
 #simplice_prueba.añadir([(1)])
 #simplice_prueba.añadir([(2)])
@@ -130,11 +162,11 @@ simplice_prueba3.añadir(["4"])
 #simplice_prueba.añadir([(1, 3, 4)])
 #
 #print(simplice_prueba.index)
-print(simplice_prueba.dimension())
+#print(simplice_prueba.dimension())
 #print(simplice_prueba.caras())
-print(simplice_prueba.carasDim(0))
-print(simplice_prueba.carasDim(1))
-print(simplice_prueba.carasDim(2))
+#print(simplice_prueba.carasDim(0))
+#print(simplice_prueba.carasDim(1))
+'''print(simplice_prueba.carasDim(2))
 print(simplice_prueba.carasDim(3))
 
 print(simplice_prueba.estrella("1"))
@@ -144,4 +176,22 @@ print(simplice_prueba.cEuler())
 print(simplice_prueba.nConexo())
 print(simplice_prueba2.nConexo())
 print(simplice_prueba3.nConexo())
+'''
+simplice_prueba4 = CS()
+simplice_prueba4.añadir([("0", "1", "2", "3")])
+print(simplice_prueba4.caras())
+print(simplice_prueba4.carasDim(0))
+ 
+simplice_prueba5 = CS()
+simplice_prueba5.añadir([("0", "1")])
+simplice_prueba5.añadir([("1", "2", "3", "4")])
+simplice_prueba5.añadir([("4", "5")])
+simplice_prueba5.añadir([("5", "6")])
+simplice_prueba5.añadir([("4", "6")])
+simplice_prueba5.añadir([("6", "7", "8")])
+simplice_prueba5.añadir([("8", "9")])
 
+simplice_prueba6 = CS()
+simplice_prueba6.añadir([("0", "1")])
+
+#print(simplice_prueba5.caras())
