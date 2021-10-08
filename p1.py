@@ -3,9 +3,7 @@ from typing import no_type_check
 class CS:
     def __init__(self):
         self.index = []
-    
-    def añadir(self, lista):
-        return self.index.append(lista)
+        self.orden = []
 
     #Devuelve la dimensión del complejo símplice
     def dimension(self):
@@ -130,6 +128,22 @@ class CS:
                 n = n+1
         print("como")
         return n
+    def añadir(self, lista):
+        return self.index.append(lista)
+
+    def insert(self, lista, numero):
+        zipped = list(zip(lista,[numero]))
+        self.añadir(zipped[0])
+        self.orden.append(zipped[0])
+        self.orden = sorted(self.orden, key=lambda tup: tup[1])
+
+        self.orden = sorted(self.orden, key=lambda tup: len(tup[0]))
+        return 
+    def filtration(self, numero):
+        return list(filter(lambda fil: menor_igual_que_peso(fil[1], numero),self.orden))
+
+def menor_igual_que_peso(numero, peso):
+    return numero <= peso
 
 def dfs(visited, graph, node):  #function for dfs 
     if node not in visited:
@@ -153,6 +167,8 @@ def combinaciones(c, n):
        elementos a la vez.
     """
     return (s for s in potencia(c) if len(s) == n)
+
+
 ''' 
 simplice_prueba = CS()
 simplice_prueba.añadir(["1"])
@@ -202,6 +218,8 @@ print(simplice_prueba.nConexo())
 print(simplice_prueba2.nConexo())
 print(simplice_prueba3.nConexo())
 '''
+
+'''
 simplice_prueba4 = CS()
 simplice_prueba4.añadir([("0",)])
 simplice_prueba4.añadir([("1",)])
@@ -226,3 +244,12 @@ simplice_prueba6 = CS()
 simplice_prueba6.añadir([("0", "1")])
 
 #print(simplice_prueba5.caras())
+'''
+
+simplice_prueba1 = CS()
+simplice_prueba1.insert([("0", "1")], 2.0)
+simplice_prueba1.insert([("0",)], 2.0)
+simplice_prueba1.insert([("1",)], 10.0)
+simplice_prueba1.insert([("1", "2")], 10.0)
+
+print(simplice_prueba1.filtration(10.0))
