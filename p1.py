@@ -1,5 +1,12 @@
 import math
 from typing import no_type_check
+from numpy.lib.function_base import append
+from scipy.spatial import Delaunay, Voronoi, voronoi_plot_2d
+import matplotlib.pyplot as plt
+import matplotlib.colors
+import matplotlib as mpl
+import numpy as np
+
 class CS:
     def __init__(self):
         self.index = []
@@ -128,6 +135,7 @@ class CS:
                 n = n+1
         print("como")
         return n
+
     def añadir(self, lista):
         return self.index.append(lista)
 
@@ -139,8 +147,10 @@ class CS:
 
         self.orden = sorted(self.orden, key=lambda tup: len(tup[0]))
         return 
+
     def filtration(self, numero):
         return list(filter(lambda fil: menor_igual_que_peso(fil[1], numero),self.orden))
+
 
 def menor_igual_que_peso(numero, peso):
     return numero <= peso
@@ -168,6 +178,76 @@ def combinaciones(c, n):
     """
     return (s for s in potencia(c) if len(s) == n)
 
+def AlphaComplex(points):
+    tri = (Delaunay(points)).simplices
+    final = []
+    for item in tri:
+        x =[]
+        for elem in item:
+            x.append(str(elem))
+        final.append(tuple(x))
+    aristas=[]
+    for triangulo in tri:
+        for i in combinaciones(triangulo, 2):
+            aristas.append(i)
+    result = []
+    for elem in aristas:
+        if elem not in result:
+            result.append(elem)
+  
+    finissima = []
+    for aris in result:
+        if aris[0] > aris[1]:
+            temp = aris[0]
+            aris[0] = aris[1]
+            aris[1] = temp
+        if aris not in finissima:
+            finissima.append(tuple(aris))
+    sin_rep = []
+    for aris in finissima:
+        if aris not in sin_rep:
+            sin_rep.append(tuple(aris))
+
+    ver = flat_list = [item for sublist in tri for item in sublist]
+    verint = []
+    for elem in ver:
+        verint.append(int(elem))
+    alpha = []
+    for elem in verint:
+        if elem not in alpha:
+            alpha.append(elem)
+    final = []
+    for elem in alpha:
+        elem = [elem]
+        final.append(tuple(elem))
+    puntos = final
+    final = final +sin_rep
+    triana = []
+    for elem in tri:
+        triana.append(tuple(elem))
+    alpha = final
+    alpha =  alpha +triana
+    print(alpha)
+    dist_alpha(points, puntos,sin_rep)
+    return alpha
+
+def dist_alpha(points, puntos, aristas):
+    puntos = sorted(puntos)
+    print("puntos", puntos)
+    print(points[0])
+    distancias = []
+    
+    for arista in aristas:
+        punto1 = [arista[0]]
+        punto2 = [arista[1]]
+        p1 = points[puntos.index(tuple(punto1))]
+        p2 = points[puntos.index(tuple(punto2))]
+        
+        distance = math.sqrt( ((p1[0]-p2[0])**2)+((p1[1]-p2[1])**2))
+        distancias.append(distance)
+    print()
+    print(distancias)
+    return distancias
 
 ''' 
 simplice_prueba = CS()
@@ -252,4 +332,26 @@ simplice_prueba1.insert([("0",)], 2.0)
 simplice_prueba1.insert([("1",)], 10.0)
 simplice_prueba1.insert([("1", "2")], 10.0)
 
-print(simplice_prueba1.filtration(10.0))
+#print(simplice_prueba1.filtration(10.0))
+
+
+
+points=np.array([(0.38021546727456423, 0.46419202339598786), (0.7951628297672293, 0.49263630135869474), (0.566623772375203, 0.038325621649018426), (0.3369306814864865, 0.7103735061134965), (0.08272837815822842, 0.2263273314352896), (0.5180166301873989, 0.6271769943824689), (0.33691411899985035, 0.8402045183219995), (0.33244488399729255, 0.4524636520475205), (0.11778991601260325, 0.6657734204021165), (0.9384303415747769, 0.2313873874340855)])     
+plt.plot(points[:,0],points[:,1],'ko')
+#plt.show()
+
+vor=Voronoi(points)
+fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
+plt.plot(points[:,0],points[:,1],'ko')
+#plt.show()
+
+tri = Delaunay(points)
+fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue' )
+c=np.ones(len(points))
+cmap = matplotlib.colors.ListedColormap("limegreen")
+plt.tripcolor(points[:,0],points[:,1],tri.simplices, c, edgecolor="k", lw=2, cmap=cmap)
+plt.plot(points[:,0], points[:,1], 'ko')
+#plt.show()
+
+alpha=AlphaComplex(points)
+
