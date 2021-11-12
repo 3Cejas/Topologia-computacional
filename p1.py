@@ -217,6 +217,7 @@ def AlphaComplex(points):
         if elem not in alpha:
             alpha.append(elem)
     final = []
+    puntos_sin_tupla = sorted(alpha)
     for elem in alpha:
         elem = [elem]
         final.append(tuple(elem))
@@ -229,8 +230,42 @@ def AlphaComplex(points):
     alpha =  alpha +triana
     print(alpha)
     dist_alpha(points, puntos,sin_rep)
+    puntos = sorted(puntos)
+    dicc_puntos_coord = dict(zip(puntos_sin_tupla, points))
+    #Hallamos los baricentros
+    baricentros = {}
+    radios = {}
+    for triangulo in triana:
+        p1 = dicc_puntos_coord [triangulo[0]]
+        p2 = dicc_puntos_coord [triangulo[1]]
+        p3 = dicc_puntos_coord [triangulo[2]]
+
+        x=(p1[0]+p2[0]+p3[0])/3
+        y=(p1[1]+p2[1]+p3[1])/3
+        baricentros[triangulo] = [x,y]
+        radios [triangulo] = circleRadius(p1,p2,p3)
+        radioli = radios.items()
+    
+    print
+
     return alpha
 
+def circleRadius(b, c, d):
+  temp = c[0]**2 + c[1]**2
+  bc = (b[0]**2 + b[1]**2 - temp) / 2
+  cd = (temp - d[0]**2 - d[1]**2) / 2
+  det = (b[0] - c[0]) * (c[1] - d[1]) - (c[0] - d[0]) * (b[1] - c[1])
+
+  if abs(det) < 1.0e-10:
+    return None
+
+  # Center of circle
+  cx = (bc*(c[1] - d[1]) - cd*(b[1] - c[1])) / det
+  cy = ((b[0] - c[0]) * cd - (c[0] - d[0]) * bc) / det
+
+  radius = ((cx - b[0])**2 + (cy - b[1])**2)**.5
+
+  return radius
 def dist_alpha(points, puntos, aristas):
     puntos = sorted(puntos)
     print("puntos", puntos)
@@ -245,9 +280,20 @@ def dist_alpha(points, puntos, aristas):
         
         distance = math.sqrt( ((p1[0]-p2[0])**2)+((p1[1]-p2[1])**2))
         distancias.append(distance)
-    print()
+    print(aristas)
     print(distancias)
-    return distancias
+    dic_aris_dis= dict(zip(aristas, distancias))
+    result = sublevel(dic_aris_dis,0.26)
+    print(result)
+    return result
+
+def sublevel(dic_aris_dis, radio):
+    filtro= {}
+    for aris in dic_aris_dis:
+        valor = dic_aris_dis[aris]
+        if valor < radio:
+            filtro[aris] = valor
+    return filtro
 
 ''' 
 simplice_prueba = CS()
