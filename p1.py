@@ -7,6 +7,7 @@ import matplotlib.colors
 import matplotlib as mpl
 import numpy as np
 
+   
 class CS:
     def __init__(self):
         self.index = []
@@ -217,10 +218,14 @@ def AlphaComplex(points):
         if elem not in alpha:
             alpha.append(elem)
     final = []
+    final_r = []
     puntos_sin_tupla = sorted(alpha)
     for elem in alpha:
         elem = [elem]
+        elem_r = [tuple(elem), 0]
         final.append(tuple(elem))
+        final_r.append(tuple(elem_r))
+    puntos_r = final_r
     puntos = final
     final = final +sin_rep
     triana = []
@@ -228,28 +233,16 @@ def AlphaComplex(points):
         triana.append(tuple(elem))
     alpha = final
     alpha =  alpha +triana
-    print(alpha)
-    dist_alpha(points, puntos,sin_rep)
+    aris_peso=list(dis_aris(points, puntos,sin_rep).items())
     puntos = sorted(puntos)
-    dicc_puntos_coord = dict(zip(puntos_sin_tupla, points))
-    #Hallamos los baricentros
-    baricentros = {}
-    radios = {}
-    for triangulo in triana:
-        p1 = dicc_puntos_coord [triangulo[0]]
-        p2 = dicc_puntos_coord [triangulo[1]]
-        p3 = dicc_puntos_coord [triangulo[2]]
-
-        x=(p1[0]+p2[0]+p3[0])/3
-        y=(p1[1]+p2[1]+p3[1])/3
-        baricentros[triangulo] = [x,y]
-        radios [triangulo] = circleRadius(p1,p2,p3)
-        radioli = radios.items()
-    
-    print
-
-    return alpha
-
+    tris_peso = dis_tris(puntos_sin_tupla, points, triana)
+    union = []
+    union.extend(puntos_r)
+    union.extend(aris_peso)
+    union.extend(tris_peso)
+    orden = sorted(union, key=lambda tup: tup[1])
+    print(orden)
+    return orden
 def circleRadius(b, c, d):
   temp = c[0]**2 + c[1]**2
   bc = (b[0]**2 + b[1]**2 - temp) / 2
@@ -266,34 +259,45 @@ def circleRadius(b, c, d):
   radius = ((cx - b[0])**2 + (cy - b[1])**2)**.5
 
   return radius
-def dist_alpha(points, puntos, aristas):
+
+def dis_tris(puntos_sin_tupla, points, triana):
+    dicc_puntos_coord = dict(zip(puntos_sin_tupla, points))
+    #Hallamos los baricentros
+    baricentros = {}
+    radios = {}
+    for triangulo in triana:
+        p1 = dicc_puntos_coord [triangulo[0]]
+        p2 = dicc_puntos_coord [triangulo[1]]
+        p3 = dicc_puntos_coord [triangulo[2]]
+
+        x=(p1[0]+p2[0]+p3[0])/3
+        y=(p1[1]+p2[1]+p3[1])/3
+        baricentros[triangulo] = [x,y]
+        radios [triangulo] = circleRadius(p1,p2,p3)
+    tris_peso = list(radios.items())
+
+    return tris_peso
+def dis_aris(points, puntos, aristas):
     puntos = sorted(puntos)
-    print("puntos", puntos)
-    print(points[0])
     distancias = []
-    
     for arista in aristas:
         punto1 = [arista[0]]
         punto2 = [arista[1]]
         p1 = points[puntos.index(tuple(punto1))]
         p2 = points[puntos.index(tuple(punto2))]
-        
-        distance = math.sqrt( ((p1[0]-p2[0])**2)+((p1[1]-p2[1])**2))
-        distancias.append(distance)
-    print(aristas)
-    print(distancias)
+        distance = math.dist(p1,p2)
+        distancias.append(distance*0.5)
+      
     dic_aris_dis= dict(zip(aristas, distancias))
-    result = sublevel(dic_aris_dis,0.26)
-    print(result)
-    return result
 
-def sublevel(dic_aris_dis, radio):
-    filtro= {}
-    for aris in dic_aris_dis:
-        valor = dic_aris_dis[aris]
-        if valor < radio:
-            filtro[aris] = valor
-    return filtro
+    return dic_aris_dis
+
+def sublevel(alpha, radio):
+    alpha_filtrado = []
+    for elem in alpha:
+        if elem[1] <= radio:
+            alpha_filtrado.append(elem[0])
+    return alpha_filtrado
 
 ''' 
 simplice_prueba = CS()
@@ -383,21 +387,45 @@ simplice_prueba1.insert([("1", "2")], 10.0)
 
 
 points=np.array([(0.38021546727456423, 0.46419202339598786), (0.7951628297672293, 0.49263630135869474), (0.566623772375203, 0.038325621649018426), (0.3369306814864865, 0.7103735061134965), (0.08272837815822842, 0.2263273314352896), (0.5180166301873989, 0.6271769943824689), (0.33691411899985035, 0.8402045183219995), (0.33244488399729255, 0.4524636520475205), (0.11778991601260325, 0.6657734204021165), (0.9384303415747769, 0.2313873874340855)])     
-plt.plot(points[:,0],points[:,1],'ko')
+#plt.plot(points[:,0],points[:,1],'ko')
 #plt.show()
 
 vor=Voronoi(points)
-fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
-plt.plot(points[:,0],points[:,1],'ko')
+#fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
+#plt.plot(points[:,0],points[:,1],'ko')
 #plt.show()
 
 tri = Delaunay(points)
-fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue' )
+#fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
 c=np.ones(len(points))
 cmap = matplotlib.colors.ListedColormap("limegreen")
-plt.tripcolor(points[:,0],points[:,1],tri.simplices, c, edgecolor="k", lw=2, cmap=cmap)
-plt.plot(points[:,0], points[:,1], 'ko')
+#plt.tripcolor(points[:,0],points[:,1],tri.simplices, c, edgecolor="k", lw=2, cmap=cmap)
+#plt.plot(points[:,0], points[:,1], 'ko')
 #plt.show()
 
 alpha=AlphaComplex(points)
+print(sublevel(alpha, 0.26))
+alpha_pesos = []
+for elem in alpha:
+    alpha_pesos.append(elem[1])
+fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
+plt.plot(points[:,0],points[:,1],'ko')
+plt.show()
+print(points)
+print(points[0], points[1])
+#plt.plot([points[0][0], points[1][0]], [points[0][1], points[1][1]])
+sublevel_sin_puntos = []
+for elem in sublevel(alpha, 0.26):
+    if len(elem) > 1:
+        sublevel_sin_puntos.append(elem)
+print(sublevel_sin_puntos)
 
+for elem in sublevel_sin_puntos:
+    #plotalpha(points,K)
+    #fig = voronoi_plot_2d(alpha,show_vertices=False,line_width=2, line_colors='blue')
+    print(elem[0]) 
+    print(elem[1])
+    fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
+    plt.plot(points[:,0],points[:,1],'ko')
+    plt.plot([points[elem[0]][0], points[elem[1]][0]], [points[elem[0]][1], points[elem[1]][1]])
+    plt.show()
