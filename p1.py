@@ -1,10 +1,10 @@
 import math
 from typing import no_type_check
-from numpy.lib.function_base import append
 from scipy.spatial import Delaunay, Voronoi, voronoi_plot_2d
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib as mpl
+from numpy.lib.function_base import append
 import numpy as np
 from matplotlib.patches import Polygon
 from itertools import combinations
@@ -171,10 +171,28 @@ class CS:
         y = self.carasDim(p-1)
         i = 0 #fila
         j = 0 #columna
-        if (M_delta[0][0] != 1):
-            for m in range(len(y)):
+        for i in range(min(len(y), len(x))):
+            j=i
+            if (i < min(len(y), len(x)) and M_delta[i][j] != 1):
                 for n in range(len(x)):
-                    if(M_delta[m][0] == 1):
+                    for m in range(len(y)):
+                        if(M_delta[m][n] == 1 and M_delta[i][j] != 1):
+                            aux = M_delta[m][:]
+                            M_delta[m][:] = M_delta[i][:]
+                            M_delta[i][:] = aux
+                            aux = M_delta[:][n]
+                            M_delta[:][n] = M_delta[:][j]
+                            M_delta[:][j] = aux
+                
+            if (i < min(len(y), len(x)) and M_delta[i][j] == 1):
+                for m in range(len(y)):
+                    if (M_delta[m][j] == 1 and m != i):
+                        M_delta[m][:] = (M_delta[m][:] + M_delta[i][:])%2
+                for n in range(len(x)):
+                    if (M_delta[i][n] == 1 and n != j):
+                        M_delta[:][n] = (M_delta[:][n] + M_delta[:][j])%2
+
+        return M_delta
                     
 
 def combinaciones(c, n):
