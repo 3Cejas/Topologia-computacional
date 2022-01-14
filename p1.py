@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib as mpl
 import numpy as np
-
+from matplotlib.patches import Polygon
+from itertools import combinations
    
 class CS:
     def __init__(self):
@@ -21,25 +22,19 @@ class CS:
                 max = len(i)
         return max - 1
     
-    #def caras(self):
-        num = 0
-        for i in self.index:
-            num = num + 1
-        return num
-    
     def caras(self):
+        maximales = self.index
         res = []
-        for lista in self.index:
-            res.append(lista[0])
-            for i in reversed(range(len(lista[0]))):
-                for j in combinaciones(lista[0], i):
-                    res.append(tuple(j))
-        res = [x for x in res if x]
-        result = []
+        for simplice in maximales:
+            res.append(tuple(simplice))
+            for i in range(len(simplice)):
+                combinaciones = list(combinations(simplice, i))
+                res = res + combinaciones
+        resultado =[]
         for elem in res:
-            if elem not in result:
-                result.append(elem)
-        return sorted(result, key=len)
+            if len(elem) != 0 and elem not in resultado:
+                resultado.append(elem)
+        return sorted(resultado, key=len)
 
     #def carasDim(self,dimensionDada):
         #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
@@ -59,25 +54,24 @@ class CS:
         return caras
 
     def estrella(self, elem):
-        caras = self.caras
+        caras = self.caras()
         cocaras = []
         for i in caras:
-            for j in i:
-                if(j == elem):
-                    cocaras.append(i)
+            if(all(elem1 in i  for elem1 in elem)):
+                cocaras.append(i)
 
         return cocaras
     
     def estrella_cerrada(self, elem):
-        cocaras = self.estrella(elem)
-        caras = self.caras()
-        sum = cocaras + caras
-        nueva_sum = []
-        for elem in sum:
-            if elem not in nueva_sum:
-                nueva_sum.append(elem)
-        k = nueva_sum
-        return sorted(k, key=len)
+        estrella_c = self.estrella(elem)
+        for i in estrella_c:
+            for j in range(len(i)):
+                combinaciones = list(combinations(i, j))
+                for h in combinaciones:
+                    if(h not in estrella_c and len(h) != 0):
+                        estrella_c.append(h)
+        
+        return sorted(estrella_c, key=len)
 
     def link(self, elem):
         estrella_cerrada =self.estrella_cerrada(elem)
@@ -112,12 +106,12 @@ class CS:
         vertices = [item for t in (self.carasDim(0)) for item in t]
         actual = vertices[0]
         adyacencia = dict.fromkeys(vertices,[])
-        print("inicio",adyacencia)
+        #print("inicio",adyacencia)
         indice = 0
         for vertice in vertices:
             almacenador = []
             for tuples in aristas:
-                print("mi vértice actual es:", vertice, "la arista actual es:", tuples)
+                #print("mi vértice actual es:", vertice, "la arista actual es:", tuples)
 
                 if vertice == tuples[0]:
                     almacenador.append(tuples[1])
@@ -127,14 +121,13 @@ class CS:
         
         visited = set()
         c_conexas = []
-        print("Following is the Depth-First Search")
-        print(adyacencia)
+        #print("Following is the Depth-First Search")
+        #print(adyacencia)
         for vertice in vertices:
             dfs(visited, adyacencia, vertice)
             if not(list(visited) in c_conexas): 
                 c_conexas.append(list(visited))
                 n = n+1
-        print("como")
         return n
 
     def añadir(self, lista):
@@ -152,13 +145,51 @@ class CS:
     def filtration(self, numero):
         return list(filter(lambda fil: menor_igual_que_peso(fil[1], numero),self.orden))
 
+    def boundary_matrix(self,p):
+        x = self.carasDim(p)
+        y = self.carasDim(p-1)
+        matriz = np.zeros((len(y), len(x)))
+        i = 0 #fila
+        j = 0 #columna
+        for cara in x:
+            combinaciones = list(combinations(cara, p))
+            resultado =[]
+            for elem in combinaciones:
+                if len(elem) != 0 and elem not in resultado:
+                    resultado.append(elem)
+            for fila in y:
+                if fila in resultado:
+                    matriz[i][j] = 1
+                i +=1
+            j +=1
+            i = 0
+        return matriz
+
+    def forma_smith(self, p):
+        M_delta = self.boundary_matrix(p)
+        x = self.carasDim(p)
+        y = self.carasDim(p-1)
+        i = 0 #fila
+        j = 0 #columna
+        if (M_delta[0][0] != 1):
+            for m in range(len(y)):
+                for n in range(len(x)):
+                    if(M_delta[m][0] == 1):
+                    
+
+def combinaciones(c, n):
+    """Calcula y devuelve una lista con todas las
+       combinaciones posibles que se pueden hacer
+       con los elementos contenidos en c tomando n
+       elementos a la vez.
+    """
+    return (s for s in potencia(c) if len(s) == n)
 
 def menor_igual_que_peso(numero, peso):
     return numero <= peso
 
 def dfs(visited, graph, node):  #function for dfs 
     if node not in visited:
-        print (node)
         visited.add(node)
         for neighbour in graph[node]:
             dfs(visited, graph, neighbour)
@@ -170,14 +201,6 @@ def potencia(c):
         return [[]]
     r = potencia(c[:-1])
     return r + [s + [c[-1]] for s in r]
-
-def combinaciones(c, n):
-    """Calcula y devuelve una lista con todas las
-       combinaciones posibles que se pueden hacer
-       con los elementos contenidos en c tomando n
-       elementos a la vez.
-    """
-    return (s for s in potencia(c) if len(s) == n)
 
 def AlphaComplex(points):
     tri = (Delaunay(points)).simplices
@@ -241,7 +264,6 @@ def AlphaComplex(points):
     union.extend(aris_peso)
     union.extend(tris_peso)
     orden = sorted(union, key=lambda tup: tup[1])
-    print(orden)
     return orden
 def circleRadius(b, c, d):
   temp = c[0]**2 + c[1]**2
@@ -299,19 +321,53 @@ def sublevel(alpha, radio):
             alpha_filtrado.append(elem[0])
     return alpha_filtrado
 
-''' 
+def DelaunayVoronoi(points):
+    alpha=AlphaComplex(points)
+    alpha_pesos = []
+    for elem in alpha:
+        alpha_pesos.append(elem[1])
+    fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
+    plt.plot(points[:,0],points[:,1],'ko')
+    cmap = matplotlib.colors.ListedColormap("limegreen")
+    c=np.ones(len(points))
+    plt.tripcolor(points[:,0],points[:,1],tri.simplices, c, edgecolor="k", lw=2,cmap=cmap)
+    plt.show()
+
+def plotSublevel(points, alpha ,radio):
+    sublevel_sin_puntos = []
+    for elem in sublevel(alpha, 0.26):
+        if len(elem) > 1:
+            sublevel_sin_puntos.append(elem)
+
+    voronoi_plot = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
+    plt.plot(points[:,0],points[:,1],'ko')
+    for elem in sublevel_sin_puntos:
+        if (len(elem) == 3):
+            p = Polygon([[points[elem[0]][0], points[elem[0]][1]], [points[elem[1]][0], points[elem[1]][1]], [points[elem[2]][0], points[elem[2]][1]] ], color= "limegreen", closed=False)
+            ax = plt.gca()
+            ax.add_patch(p)
+        else:
+            plt.plot([points[elem[0]][0], points[elem[1]][0]], [points[elem[0]][1], points[elem[1]][1]], 'black')
+        plt.pause(0.5)
+    plt.show()
+
+
+
 simplice_prueba = CS()
-simplice_prueba.añadir(["1"])
-simplice_prueba.añadir(["2"])
-simplice_prueba.añadir(["3"])
-simplice_prueba.añadir(["4"])
-simplice_prueba.añadir(["1", "2"])
-simplice_prueba.añadir(["1", "3"])
-simplice_prueba.añadir(["1", "4"])
-simplice_prueba.añadir(["3", "4"])
-simplice_prueba.añadir(["2", "3"])
-simplice_prueba.añadir(["1", "2", "3"])
-simplice_prueba.añadir(["1", "3", "4"])
+
+simplice_prueba.añadir(["0", "1"])
+simplice_prueba.añadir(["1", "2", "3", "4"])
+
+'''
+print(simplice_prueba.index)
+print(simplice_prueba.caras())
+print(simplice_prueba.carasDim(1))
+print("aquí")
+print(simplice_prueba.estrella(("2",)))
+print(simplice_prueba.nConexo())
+'''
+print(simplice_prueba.boundary_matrix(1))
+'''
 simplice_prueba2 = CS()
 simplice_prueba3 = CS()
 simplice_prueba3.añadir(["1"])
@@ -337,14 +393,15 @@ simplice_prueba3.añadir(["4"])
 #print(simplice_prueba.caras())
 #print(simplice_prueba.carasDim(0))
 #print(simplice_prueba.carasDim(1))
-'''print(simplice_prueba.carasDim(2))
+'''
+print(simplice_prueba.carasDim(2))
 print(simplice_prueba.carasDim(3))
-
 print(simplice_prueba.estrella("1"))
 print(simplice_prueba.estrella_cerrada("1"))
 print(simplice_prueba.link("1"))
 print(simplice_prueba.cEuler())
 print(simplice_prueba.nConexo())
+
 print(simplice_prueba2.nConexo())
 print(simplice_prueba3.nConexo())
 '''
@@ -369,10 +426,8 @@ simplice_prueba5.añadir([("5", "6")])
 simplice_prueba5.añadir([("4", "6")])
 simplice_prueba5.añadir([("6", "7", "8")])
 simplice_prueba5.añadir([("8", "9")])
-
 simplice_prueba6 = CS()
 simplice_prueba6.añadir([("0", "1")])
-
 #print(simplice_prueba5.caras())
 '''
 
@@ -382,50 +437,16 @@ simplice_prueba1.insert([("0",)], 2.0)
 simplice_prueba1.insert([("1",)], 10.0)
 simplice_prueba1.insert([("1", "2")], 10.0)
 
-#print(simplice_prueba1.filtration(10.0))
+print(simplice_prueba1.filtration(9.0))
 
 
 
 points=np.array([(0.38021546727456423, 0.46419202339598786), (0.7951628297672293, 0.49263630135869474), (0.566623772375203, 0.038325621649018426), (0.3369306814864865, 0.7103735061134965), (0.08272837815822842, 0.2263273314352896), (0.5180166301873989, 0.6271769943824689), (0.33691411899985035, 0.8402045183219995), (0.33244488399729255, 0.4524636520475205), (0.11778991601260325, 0.6657734204021165), (0.9384303415747769, 0.2313873874340855)])     
-#plt.plot(points[:,0],points[:,1],'ko')
-#plt.show()
+
 
 vor=Voronoi(points)
-#fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
-#plt.plot(points[:,0],points[:,1],'ko')
-#plt.show()
 
 tri = Delaunay(points)
-#fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
-c=np.ones(len(points))
-cmap = matplotlib.colors.ListedColormap("limegreen")
-#plt.tripcolor(points[:,0],points[:,1],tri.simplices, c, edgecolor="k", lw=2, cmap=cmap)
-#plt.plot(points[:,0], points[:,1], 'ko')
-#plt.show()
+#DelaunayVoronoi(points)
 
-alpha=AlphaComplex(points)
-print(sublevel(alpha, 0.26))
-alpha_pesos = []
-for elem in alpha:
-    alpha_pesos.append(elem[1])
-fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
-plt.plot(points[:,0],points[:,1],'ko')
-plt.show()
-print(points)
-print(points[0], points[1])
-#plt.plot([points[0][0], points[1][0]], [points[0][1], points[1][1]])
-sublevel_sin_puntos = []
-for elem in sublevel(alpha, 0.26):
-    if len(elem) > 1:
-        sublevel_sin_puntos.append(elem)
-print(sublevel_sin_puntos)
-
-for elem in sublevel_sin_puntos:
-    #plotalpha(points,K)
-    #fig = voronoi_plot_2d(alpha,show_vertices=False,line_width=2, line_colors='blue')
-    print(elem[0]) 
-    print(elem[1])
-    fig = voronoi_plot_2d(vor,show_vertices=False,line_width=2, line_colors='blue')
-    plt.plot(points[:,0],points[:,1],'ko')
-    plt.plot([points[elem[0]][0], points[elem[1]][0]], [points[elem[0]][1], points[elem[1]][1]])
-    plt.show()
+#plotSublevel(points, AlphaComplex(points), 0.26 )
