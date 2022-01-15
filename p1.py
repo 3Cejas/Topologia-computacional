@@ -1,10 +1,10 @@
 import math
 from typing import no_type_check
+from numpy.lib.function_base import append
 from scipy.spatial import Delaunay, Voronoi, voronoi_plot_2d
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib as mpl
-from numpy.lib.function_base import append
 import numpy as np
 from matplotlib.patches import Polygon
 from itertools import combinations
@@ -172,28 +172,62 @@ class CS:
         i = 0 #fila
         j = 0 #columna
         for i in range(min(len(y), len(x))):
-            j=i
+            j=i            
+            for m in range(len(y)):
+                for n in range (len(y)):
+                    if ((M_delta[m][:] == M_delta[n][:]).all() and n > m and m >(i-1)):
+                        M_delta[n][:] = (M_delta[n][:] + M_delta[n][:])%2
             if (i < min(len(y), len(x)) and M_delta[i][j] != 1):
                 for n in range(len(x)):
-                    for m in range(len(y)):
-                        if(M_delta[m][n] == 1 and M_delta[i][j] != 1):
-                            aux = M_delta[m][:]
-                            M_delta[m][:] = M_delta[i][:]
-                            M_delta[i][:] = aux
-                            aux = M_delta[:][n]
-                            M_delta[:][n] = M_delta[:][j]
-                            M_delta[:][j] = aux
-                
+                    if(n >= j):
+                        for m in range(len(y)):
+                            if(M_delta[m][n] == 1 and M_delta[i][j] != 1 and m > i):
+                                M_delta[[m, i], : ] = M_delta[[i, m],: ]
+                            if(M_delta[i][j] != 1):
+                                M_delta[:,[n, j ]] = M_delta[:,[j, n] ]
+
             if (i < min(len(y), len(x)) and M_delta[i][j] == 1):
                 for m in range(len(y)):
-                    if (M_delta[m][j] == 1 and m != i):
-                        M_delta[m][:] = (M_delta[m][:] + M_delta[i][:])%2
+                    if (M_delta[m][j] == 1 and m > i):
+                        M_delta[m][:] = (M_delta[m][:] + M_delta[i][:])%2     
                 for n in range(len(x)):
-                    if (M_delta[i][n] == 1 and n != j):
-                        M_delta[:][n] = (M_delta[:][n] + M_delta[:][j])%2
-
+                    if (M_delta[i][n] == 1 and n > j):
+                        M_delta[i][n] = (M_delta[i][n] + M_delta[i][j])%2
         return M_delta
-                    
+        
+    def n_betti(self, p):
+        N = self.forma_smith(p)
+        x = self.carasDim(p)
+        y = self.carasDim(p-1)
+        contador = 0
+        for i in range(min(len(y), len(x))):
+            if(N[i][i] == 1):
+                contador +=1
+        dim_Z = len(x) -contador 
+        N = self.forma_smith(p+1)
+        x = self.carasDim(p+1)
+        y = self.carasDim(p)
+        dim_B = 0
+        for i in range(min(len(y), len(x))):
+            if(N[i][i] == 1):
+                dim_B+=1
+        return (dim_Z - dim_B)
+    
+    def incremental(self):
+        b_0 = b_1 = 0
+        añadidos = []
+        simplice = self.caras()
+        for s in simplice:
+            if(len(s)== 1):
+                b_0 +=1
+            if(len(s) == 2):
+                añadidos.append(s)
+                visitados = []
+                for arista in añadidos:
+                    print("bien")
+            if(len(s) > 2):
+                b_1 -=1
+        print("b_0: ", b_0, "\nb_1: ", b_1)
 
 def combinaciones(c, n):
     """Calcula y devuelve una lista con todas las
@@ -373,8 +407,38 @@ def plotSublevel(points, alpha ,radio):
 
 simplice_prueba = CS()
 
+#TETRAEDRO
+simplice_tetraedro = CS()
+simplice_tetraedro.añadir(["0", "1", "2"])
+'''
+print(simplice_tetraedro.n_betti(0))
+print(simplice_tetraedro.n_betti(1))
+print(simplice_tetraedro.n_betti(2))
+print(simplice_tetraedro.n_betti(3))
+'''
+
+simplice_tetraedro.incremental()
+'''
+#BORDE DEL TETRAEDRO
+simplice_tetraedro_borde = CS()
+simplice_tetraedro_borde.añadir(["0", "1"])
+simplice_tetraedro_borde.añadir(["0", "2"])
+simplice_tetraedro_borde.añadir(["0", "3"])
+simplice_tetraedro_borde.añadir(["1", "2"])
+simplice_tetraedro_borde.añadir(["1", "3"])
+simplice_tetraedro_borde.añadir(["2", "3"])
+
+print(simplice_tetraedro_borde.n_betti(0))
+print(simplice_tetraedro_borde.n_betti(1))
+
 simplice_prueba.añadir(["0", "1"])
 simplice_prueba.añadir(["1", "2", "3", "4"])
+simplice_prueba.añadir(["4", "5"])
+simplice_prueba.añadir(["5", "6"])
+simplice_prueba.añadir(["4", "6"])
+simplice_prueba.añadir(["6", "7", "8"])
+simplice_prueba.añadir(["8", "9"])
+'''
 
 '''
 print(simplice_prueba.index)
@@ -383,16 +447,24 @@ print(simplice_prueba.carasDim(1))
 print("aquí")
 print(simplice_prueba.estrella(("2",)))
 print(simplice_prueba.nConexo())
-'''
-print(simplice_prueba.boundary_matrix(1))
-'''
+
+print(simplice_prueba.forma_smith(2))
+
+print("hola")
+print(simplice_prueba.n_betti(0))
+
+print(simplice_prueba.n_betti(1))
+print(simplice_prueba.n_betti(2))
+print(simplice_prueba.n_betti(3))
+
+
 simplice_prueba2 = CS()
 simplice_prueba3 = CS()
 simplice_prueba3.añadir(["1"])
 simplice_prueba3.añadir(["2"])
 simplice_prueba3.añadir(["3"])
 simplice_prueba3.añadir(["4"])
-'''
+
 #
 #simplice_prueba.añadir([(1)])
 #simplice_prueba.añadir([(2)])
@@ -411,7 +483,7 @@ simplice_prueba3.añadir(["4"])
 #print(simplice_prueba.caras())
 #print(simplice_prueba.carasDim(0))
 #print(simplice_prueba.carasDim(1))
-'''
+
 print(simplice_prueba.carasDim(2))
 print(simplice_prueba.carasDim(3))
 print(simplice_prueba.estrella("1"))
