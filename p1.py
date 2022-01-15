@@ -223,8 +223,20 @@ class CS:
             if(len(s) == 2):
                 añadidos.append(s)
                 visitados = []
-                for arista in añadidos:
-                    print("bien")
+                visitados.append(s)
+                pivote = s
+                if (len(añadidos)>2):
+                    for arista in añadidos:
+                        if (arista[0]  == pivote[1]):
+                            visitados.append(arista)
+                            pivote = arista
+                    if (s[0] or s[1] == (pivote[0] or pivote[1])):
+                        b_1 += 1
+                    else:
+                        b_0 -= 1
+                else:
+                    b_0 -= 1
+
             if(len(s) > 2):
                 b_1 -=1
         print("b_0: ", b_0, "\nb_1: ", b_1)
@@ -246,9 +258,9 @@ def dfs(visited, graph, node):  #function for dfs
         for neighbour in graph[node]:
             dfs(visited, graph, neighbour)
 def potencia(c):
-    """Calcula y devuelve el conjunto potencia del 
-       conjunto c.
-    """
+    # Calcula y devuelve el conjunto potencia del 
+    # conjunto c.
+    
     if len(c) == 0:
         return [[]]
     r = potencia(c[:-1])
@@ -385,7 +397,7 @@ def DelaunayVoronoi(points):
     plt.tripcolor(points[:,0],points[:,1],tri.simplices, c, edgecolor="k", lw=2,cmap=cmap)
     plt.show()
 
-def plotSublevel(points, alpha ,radio):
+def plotSublevel(points, alpha, radio):
     sublevel_sin_puntos = []
     for elem in sublevel(alpha, 0.26):
         if len(elem) > 1:
@@ -409,125 +421,261 @@ simplice_prueba = CS()
 
 #TETRAEDRO
 simplice_tetraedro = CS()
-simplice_tetraedro.añadir(["0", "1", "2"])
-'''
-print(simplice_tetraedro.n_betti(0))
-print(simplice_tetraedro.n_betti(1))
-print(simplice_tetraedro.n_betti(2))
-print(simplice_tetraedro.n_betti(3))
-'''
+simplice_tetraedro.añadir(["0", "1", "2", "3"])
 
-simplice_tetraedro.incremental()
-'''
+# print(simplice_tetraedro.n_betti(0))
+# print(simplice_tetraedro.n_betti(1))
+# print(simplice_tetraedro.n_betti(2))
+# print(simplice_tetraedro.n_betti(3))
+
+
+
+
 #BORDE DEL TETRAEDRO
 simplice_tetraedro_borde = CS()
-simplice_tetraedro_borde.añadir(["0", "1"])
-simplice_tetraedro_borde.añadir(["0", "2"])
-simplice_tetraedro_borde.añadir(["0", "3"])
-simplice_tetraedro_borde.añadir(["1", "2"])
-simplice_tetraedro_borde.añadir(["1", "3"])
-simplice_tetraedro_borde.añadir(["2", "3"])
+for caras in simplice_tetraedro.carasDim(2):
+     simplice_tetraedro_borde.añadir(caras)
+# simplice_tetraedro_borde.añadir(["0", "1"])
+# simplice_tetraedro_borde.añadir(["0", "2"])
+# simplice_tetraedro_borde.añadir(["0", "3"])
+# simplice_tetraedro_borde.añadir(["1", "2"])
+# simplice_tetraedro_borde.añadir(["1", "3"])
+# simplice_tetraedro_borde.añadir(["2", "3"])
 
-print(simplice_tetraedro_borde.n_betti(0))
-print(simplice_tetraedro_borde.n_betti(1))
-
-simplice_prueba.añadir(["0", "1"])
-simplice_prueba.añadir(["1", "2", "3", "4"])
-simplice_prueba.añadir(["4", "5"])
-simplice_prueba.añadir(["5", "6"])
-simplice_prueba.añadir(["4", "6"])
-simplice_prueba.añadir(["6", "7", "8"])
-simplice_prueba.añadir(["8", "9"])
-'''
-
-'''
-print(simplice_prueba.index)
-print(simplice_prueba.caras())
-print(simplice_prueba.carasDim(1))
-print("aquí")
-print(simplice_prueba.estrella(("2",)))
-print(simplice_prueba.nConexo())
-
-print(simplice_prueba.forma_smith(2))
-
-print("hola")
-print(simplice_prueba.n_betti(0))
-
-print(simplice_prueba.n_betti(1))
-print(simplice_prueba.n_betti(2))
-print(simplice_prueba.n_betti(3))
+# print(simplice_tetraedro_borde.n_betti(0))
+# print(simplice_tetraedro_borde.n_betti(1))
+# print(simplice_tetraedro_borde.n_betti(2))
 
 
-simplice_prueba2 = CS()
-simplice_prueba3 = CS()
-simplice_prueba3.añadir(["1"])
-simplice_prueba3.añadir(["2"])
-simplice_prueba3.añadir(["3"])
-simplice_prueba3.añadir(["4"])
+# El toro con las dos triangulaciones.
+simplice_toro1 = CS()
+simplice_toro1.añadir(["1", "2", "4"])
+simplice_toro1.añadir(["2", "4", "5"])
+simplice_toro1.añadir(["2", "3", "5"])
+simplice_toro1.añadir(["3", "5", "6"])
+simplice_toro1.añadir(["1", "3", "6"])
+simplice_toro1.añadir(["1", "4", "6"])
+simplice_toro1.añadir(["4", "5", "7"])
+simplice_toro1.añadir(["5", "7", "8"])
+simplice_toro1.añadir(["5", "6", "8"])
+simplice_toro1.añadir(["6", "8", "9"])
+simplice_toro1.añadir(["4", "6", "9"])
+simplice_toro1.añadir(["4", "7", "9"])
+simplice_toro1.añadir(["1", "7", "8"])
+simplice_toro1.añadir(["1", "2", "8"])
+simplice_toro1.añadir(["2", "8", "9"])
+simplice_toro1.añadir(["2", "3", "9"])
+simplice_toro1.añadir(["3", "7", "9"])
+simplice_toro1.añadir(["1", "3", "7"])
 
-#
-#simplice_prueba.añadir([(1)])
-#simplice_prueba.añadir([(2)])
-#simplice_prueba.añadir([(3)])
-#simplice_prueba.añadir([(4)])
-#simplice_prueba.añadir([(1, 2)])
-#simplice_prueba.añadir([(1, 3)])
-#simplice_prueba.añadir([(1, 4)])
-#simplice_prueba.añadir([(3, 4)])
-#simplice_prueba.añadir([(2, 3)])
-#simplice_prueba.añadir([(1, 2, 3)])
-#simplice_prueba.añadir([(1, 3, 4)])
-#
-#print(simplice_prueba.index)
-#print(simplice_prueba.dimension())
-#print(simplice_prueba.caras())
-#print(simplice_prueba.carasDim(0))
-#print(simplice_prueba.carasDim(1))
+# print(simplice_toro1.n_betti(0))
+# print(simplice_toro1.n_betti(1))
+# print(simplice_toro1.n_betti(2))
 
-print(simplice_prueba.carasDim(2))
-print(simplice_prueba.carasDim(3))
-print(simplice_prueba.estrella("1"))
-print(simplice_prueba.estrella_cerrada("1"))
-print(simplice_prueba.link("1"))
-print(simplice_prueba.cEuler())
-print(simplice_prueba.nConexo())
 
-print(simplice_prueba2.nConexo())
-print(simplice_prueba3.nConexo())
-'''
+simplice_toro2 = CS()
+# for caras in simplice_toro1.carasDim(1):
+#     simplice_toro2.añadir(caras)
 
-'''
-simplice_prueba4 = CS()
-simplice_prueba4.añadir([("0",)])
-simplice_prueba4.añadir([("1",)])
-simplice_prueba4.añadir([("2", "3")])
-simplice_prueba4.añadir([("4", "5")])
-simplice_prueba4.añadir([("5", "6")])
-simplice_prueba4.añadir([("4", "6")])
-simplice_prueba4.añadir([("6", "7", "8", "9")])
-#print(simplice_prueba4.caras())
-print(simplice_prueba4.carasDim(1))
-print(simplice_prueba4.nConexo()) 
-simplice_prueba5 = CS()
-simplice_prueba5.añadir([("0", "1")])
-simplice_prueba5.añadir([("1", "2", "3", "4")])
-simplice_prueba5.añadir([("4", "5")])
-simplice_prueba5.añadir([("5", "6")])
-simplice_prueba5.añadir([("4", "6")])
-simplice_prueba5.añadir([("6", "7", "8")])
-simplice_prueba5.añadir([("8", "9")])
-simplice_prueba6 = CS()
-simplice_prueba6.añadir([("0", "1")])
-#print(simplice_prueba5.caras())
-'''
+simplice_toro2.añadir(["0", "1", "5"])
+simplice_toro2.añadir(["0", "3", "5"])
+simplice_toro2.añadir(["1", "2", "5"])
+simplice_toro2.añadir(["2", "5", "6"])
+simplice_toro2.añadir(["0", "2", "6"])
+simplice_toro2.añadir(["0", "3", "6"])
+simplice_toro2.añadir(["3", "4", "5"])
+simplice_toro2.añadir(["4", "5", "7"])
+simplice_toro2.añadir(["5", "6", "7"])
+simplice_toro2.añadir(["6", "7", "8"])
+simplice_toro2.añadir(["3", "6", "8"])
+simplice_toro2.añadir(["3", "4", "8"])
+simplice_toro2.añadir(["0", "4", "7"])
+simplice_toro2.añadir(["0", "1", "7"])
+simplice_toro2.añadir(["1", "7", "8"])
+simplice_toro2.añadir(["1", "2", "8"])
+simplice_toro2.añadir(["0", "4", "8"])
+simplice_toro2.añadir(["0", "2", "8"])
 
-simplice_prueba1 = CS()
-simplice_prueba1.insert([("0", "1")], 2.0)
-simplice_prueba1.insert([("0",)], 2.0)
-simplice_prueba1.insert([("1",)], 10.0)
-simplice_prueba1.insert([("1", "2")], 10.0)
+# print(simplice_toro2.n_betti(0))
+# print(simplice_toro2.n_betti(1))
+# print(simplice_toro2.n_betti(2))
 
-print(simplice_prueba1.filtration(9.0))
+
+# El plano proyectivo.
+simplice_planoproy = CS()
+simplice_planoproy.añadir(["1", "2", "6"])
+simplice_planoproy.añadir(["2", "3", "4"])
+simplice_planoproy.añadir(["1", "3", "4"])
+simplice_planoproy.añadir(["1", "2", "5"])
+simplice_planoproy.añadir(["2", "3", "5"])
+simplice_planoproy.añadir(["1", "3", "6"])
+simplice_planoproy.añadir(["2", "4", "6"])
+simplice_planoproy.añadir(["1", "4", "5"])
+simplice_planoproy.añadir(["3", "5", "6"])
+simplice_planoproy.añadir(["4", "5", "6"])
+
+# print(simplice_planoproy.n_betti(0))
+# print(simplice_planoproy.n_betti(1))
+# print(simplice_planoproy.n_betti(2))
+
+# La botella de Klein.
+simplice_klein = CS()
+simplice_klein.añadir(["0", "1", "5"])
+simplice_klein.añadir(["0", "3", "5"])
+simplice_klein.añadir(["1", "2", "5"])
+simplice_klein.añadir(["2", "5", "6"])
+simplice_klein.añadir(["0", "2", "6"])
+simplice_klein.añadir(["0", "4", "6"])
+simplice_klein.añadir(["3", "4", "5"])
+simplice_klein.añadir(["4", "5", "7"])
+simplice_klein.añadir(["5", "6", "7"])
+simplice_klein.añadir(["6", "7", "8"])
+simplice_klein.añadir(["4", "6", "8"])
+simplice_klein.añadir(["3", "4", "8"])
+simplice_klein.añadir(["0", "4", "7"])
+simplice_klein.añadir(["0", "1", "7"])
+simplice_klein.añadir(["1", "7", "8"])
+simplice_klein.añadir(["1", "2", "8"])
+simplice_klein.añadir(["0", "2", "8"])
+simplice_klein.añadir(["0", "3", "8"])
+
+# print(simplice_klein.n_betti(0))
+# print(simplice_klein.n_betti(1))
+# print(simplice_klein.n_betti(2))
+
+
+# El anillo.
+
+simplice_anillo = CS()
+
+simplice_anillo.añadir(["1", "2", "4"])
+simplice_anillo.añadir(["1", "3", "6"])
+simplice_anillo.añadir(["1", "4", "6"])
+simplice_anillo.añadir(["2", "3", "5"])
+simplice_anillo.añadir(["2", "4", "5"])
+simplice_anillo.añadir(["3", "5", "6"])
+
+# print(simplice_anillo.n_betti(0))
+# print(simplice_anillo.n_betti(1))
+# print(simplice_anillo.n_betti(2))
+
+# El sombrero del asno.
+
+simplice_asno = CS()
+
+
+
+# Del complejo simplicial de la transparencia 4 del documento Homología Simplicial II.
+
+simplice_hs2t4 = CS()
+simplice_hs2t4.añadir(["0", "1"])
+simplice_hs2t4.añadir(["1", "2", "3", "4"])
+simplice_hs2t4.añadir(["4", "5"])
+simplice_hs2t4.añadir(["5", "6"])
+simplice_hs2t4.añadir(["4", "6"])
+simplice_hs2t4.añadir(["6", "7", "8"])
+simplice_hs2t4.añadir(["8", "9"])
+
+# print(simplice_hs2t4.n_betti(0))
+# print(simplice_hs2t4.n_betti(1))
+# print(simplice_hs2t4.n_betti(2))
+# print(simplice_hs2t4.n_betti(3))
+
+# Del doble toro.
+
+
+# De algunos alfa complejos.
+
+simplice_alg = CS()
+simplice_alg.añadir(["0", "1", "2"])
+simplice_alg.añadir(["0", "2", "3"])
+simplice_alg.añadir(["0", "8", "9"])
+simplice_alg.añadir(["7", "8", "9"])
+simplice_alg.añadir(["6", "7", "8"])
+simplice_alg.añadir(["5", "6", "8"])
+simplice_alg.añadir(["3", "4"])
+simplice_alg.añadir(["3", "5"])
+simplice_alg.añadir(["4", "5"])
+ 
+simplice_alg.incremental()
+
+# simplice_prueba.añadir(["0", "1"])
+# simplice_prueba.añadir(["1", "2", "3", "4"])
+# simplice_prueba.añadir(["4", "5"])
+# simplice_prueba.añadir(["5", "6"])
+# simplice_prueba.añadir(["4", "6"])
+# simplice_prueba.añadir(["6", "7", "8"])
+# simplice_prueba.añadir(["8", "9"])
+
+
+# print(simplice_prueba.index)
+# print(simplice_prueba.caras())
+# print(simplice_prueba.carasDim(1))
+# print(simplice_prueba.estrella(("2",)))
+# print(simplice_prueba.nConexo())
+
+# print(simplice_prueba.forma_smith(2))
+
+# print(simplice_prueba.n_betti(0))
+# print(simplice_prueba.n_betti(1))
+# print(simplice_prueba.n_betti(2))
+# print(simplice_prueba.n_betti(3))
+
+
+# simplice_prueba2 = CS()
+# simplice_prueba3 = CS()
+# simplice_prueba3.añadir(["1"])
+# simplice_prueba3.añadir(["2"])
+# simplice_prueba3.añadir(["3"])
+# simplice_prueba3.añadir(["4"])
+
+
+
+# simplice_prueba.añadir([(1, 2, 3)])
+# simplice_prueba.añadir([(1, 3, 4)])
+
+# print(simplice_prueba.index)
+# print(simplice_prueba.dimension())
+# print(simplice_prueba.caras())
+# print(simplice_prueba.carasDim(0))
+# print(simplice_prueba.carasDim(1))
+
+# print(simplice_prueba.carasDim(2))
+# print(simplice_prueba.carasDim(3))
+# print(simplice_prueba.estrella("1"))
+# print(simplice_prueba.estrella_cerrada("1"))
+# print(simplice_prueba.link("1"))
+# print(simplice_prueba.cEuler())
+# print(simplice_prueba.nConexo())
+
+# print(simplice_prueba2.nConexo())
+# print(simplice_prueba3.nConexo())
+
+
+
+# simplice_prueba4 = CS()
+# simplice_prueba4.añadir([("0",)])
+# simplice_prueba4.añadir([("1",)])
+# simplice_prueba4.añadir([("2", "3")])
+# simplice_prueba4.añadir([("4", "5")])
+# simplice_prueba4.añadir([("5", "6")])
+# simplice_prueba4.añadir([("4", "6")])
+# simplice_prueba4.añadir([("6", "7", "8", "9")])
+# print(simplice_prueba4.caras())
+# print(simplice_prueba4.carasDim(1))
+# print(simplice_prueba4.nConexo()) 
+# simplice_prueba6 = CS()
+# simplice_prueba6.añadir([("0", "1")])
+
+
+# simplice_pruebapeso = CS()
+
+# simplice_pruebapeso.insert([("0", "1")], 2.0)
+# simplice_pruebapeso.insert([("0",)], 2.0)
+# simplice_pruebapeso.insert([("1",)], 10.0)
+# simplice_pruebapeso.insert([("1", "2")], 10.0)
+
+# print(simplice_pruebapeso.filtration(9.0))
 
 
 
