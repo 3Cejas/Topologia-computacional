@@ -1,4 +1,7 @@
+import copy
 import math
+from os import remove
+from queue import Empty
 from typing import no_type_check
 from numpy.lib.function_base import append
 from scipy.spatial import Delaunay, Voronoi, voronoi_plot_2d
@@ -212,41 +215,74 @@ class CS:
             if(N[i][i] == 1):
                 dim_B+=1
         return (dim_Z - dim_B)
-    
+
     def incremental(self):
         b_0 = b_1 = 0
         añadidos = []
         simplice = self.caras()
+        aristas = 0
+        vertices_activos = []
+        caras_actuales = 0
         for s in simplice:
             if(len(s)== 1):
                 b_0 +=1
             if(len(s) == 2):
                 añadidos.append(s)
-                visitados = []
-                visitados.append(s)
-                pivote = s
-                if (len(añadidos)>2):
-                    for arista in añadidos:
-                        if (arista[0]  == pivote[1]):
-                            visitados.append(arista)
-                            pivote = arista
-                    if (s[0] or s[1] == (pivote[0] or pivote[1])):
-                        b_1 += 1
-                    else:
-                        b_0 -= 1
+                if s[0] not in vertices_activos:
+                    vertices_activos.append(s[0])
+                if s[1] not in vertices_activos:
+                    vertices_activos.append(s[1])
+                aristas +=1
+                if((aristas-len(vertices_activos)+1)>caras_actuales):
+                    b_1 +=((aristas-len(vertices_activos)+1)-caras_actuales)
+                    caras_actuales = (aristas-len(vertices_activos)+1)
                 else:
-                    b_0 -= 1
-
-            if(len(s) > 2):
+                    b_0 -=1
+            if(len(s) >= 3):
                 b_1 -=1
         print("b_0: ", b_0, "\nb_1: ", b_1)
+    
+    def general_boundary_matrix(self):
+        simplices = self.caras()
+        matriz = np.zeros((len(simplices), len(simplices)))
+        for s in simplices:
+            for l in simplices:
+                if(set(l).issubset(set(s)) and len(l) == len(s)-1):
+                    matriz[simplices.index(l)][simplices.index(s)] = 1
+        return matriz
+
+def reduce_column_if_necessary(R_t, V_t, i):
+    actual_low = low(R_t, i)
+    j = 0
+    while actual_low != -1 and j < i:
+        if low(R_t, j) == low(R_t, i):
+            R_t[i] = (R_t[i] + R_t[j])%2
+            V_t[i] = (V_t[i] + V_t[j])%2
+            j = 0 
+        j+=1
+    return R_t, V_t
+def alg_matricial(matriz):
+    assert len(matriz) > 0
+    R_t = copy.deepcopy(matriz)
+    numbers_of_columns = len(R_t)
+    V_t = np.zeros(numbers_of_columns)
+    for i in range(numbers_of_columns):
+        R_t, V_t = reduce_column_if_necessary(R_t, V_t, i)
+    return R_t, V_t
+
+def low(matriz, j):
+    red_flag = 0
+    for fila in reversed(range(len(matriz))):
+        if(matriz[fila][j] == 1 and red_flag == 0):
+            red_flag = 1
+            return fila
 
 def combinaciones(c, n):
-    """Calcula y devuelve una lista con todas las
-       combinaciones posibles que se pueden hacer
-       con los elementos contenidos en c tomando n
-       elementos a la vez.
-    """
+    # Calcula y devuelve una lista con todas las
+    # combinaciones posibles que se pueden hacer
+    # con los elementos contenidos en c tomando n
+    # elementos a la vez.
+
     return (s for s in potencia(c) if len(s) == n)
 
 def menor_igual_que_peso(numero, peso):
@@ -257,6 +293,8 @@ def dfs(visited, graph, node):  #function for dfs
         visited.add(node)
         for neighbour in graph[node]:
             dfs(visited, graph, neighbour)
+
+
 def potencia(c):
     # Calcula y devuelve el conjunto potencia del 
     # conjunto c.
@@ -329,6 +367,7 @@ def AlphaComplex(points):
     union.extend(tris_peso)
     orden = sorted(union, key=lambda tup: tup[1])
     return orden
+
 def circleRadius(b, c, d):
   temp = c[0]**2 + c[1]**2
   bc = (b[0]**2 + b[1]**2 - temp) / 2
@@ -416,7 +455,6 @@ def plotSublevel(points, alpha, radio):
     plt.show()
 
 
-
 simplice_prueba = CS()
 
 #TETRAEDRO
@@ -427,10 +465,8 @@ simplice_tetraedro.añadir(["0", "1", "2", "3"])
 # print(simplice_tetraedro.n_betti(1))
 # print(simplice_tetraedro.n_betti(2))
 # print(simplice_tetraedro.n_betti(3))
-
-
-
-
+print(simplice_tetraedro.general_boundary_matrix())
+print(alg_matricial(simplice_tetraedro.general_boundary_matrix()))
 #BORDE DEL TETRAEDRO
 simplice_tetraedro_borde = CS()
 for caras in simplice_tetraedro.carasDim(2):
@@ -468,9 +504,10 @@ simplice_toro1.añadir(["2", "3", "9"])
 simplice_toro1.añadir(["3", "7", "9"])
 simplice_toro1.añadir(["1", "3", "7"])
 
+# simplice_toro1.incremental()
 # print(simplice_toro1.n_betti(0))
 # print(simplice_toro1.n_betti(1))
-# print(simplice_toro1.n_betti(2))
+
 
 
 simplice_toro2 = CS()
@@ -588,7 +625,7 @@ simplice_hs2t4.añadir(["8", "9"])
 
 simplice_alg = CS()
 simplice_alg.añadir(["0", "1", "2"])
-simplice_alg.añadir(["0", "2", "3"])
+simplice_alg.añadir(["0", "2", "3"]) 
 simplice_alg.añadir(["0", "8", "9"])
 simplice_alg.añadir(["7", "8", "9"])
 simplice_alg.añadir(["6", "7", "8"])
@@ -596,8 +633,11 @@ simplice_alg.añadir(["5", "6", "8"])
 simplice_alg.añadir(["3", "4"])
 simplice_alg.añadir(["3", "5"])
 simplice_alg.añadir(["4", "5"])
- 
+#print(simplice_alg.caras())
 simplice_alg.incremental()
+print(simplice_alg.n_betti(0))
+print(simplice_alg.n_betti(1))
+
 
 # simplice_prueba.añadir(["0", "1"])
 # simplice_prueba.añadir(["1", "2", "3", "4"])
@@ -677,7 +717,19 @@ simplice_alg.incremental()
 
 # print(simplice_pruebapeso.filtration(9.0))
 
-
+simplice_alg1 = CS()
+simplice_alg1.añadir(["0"])
+simplice_alg1.añadir(["1"]) 
+simplice_alg1.añadir(["2", "3"])
+simplice_alg1.añadir(["4", "5",])
+simplice_alg1.añadir(["5", "6"])
+simplice_alg1.añadir(["4", "6"])
+simplice_alg1.añadir(["3", "4"])
+simplice_alg1.añadir(["6", "7", "8"])
+#print(simplice_alg.caras())
+# simplice_alg1.incremental()
+# print(simplice_alg1.n_betti(0))
+# print(simplice_alg1.n_betti(1))
 
 points=np.array([(0.38021546727456423, 0.46419202339598786), (0.7951628297672293, 0.49263630135869474), (0.566623772375203, 0.038325621649018426), (0.3369306814864865, 0.7103735061134965), (0.08272837815822842, 0.2263273314352896), (0.5180166301873989, 0.6271769943824689), (0.33691411899985035, 0.8402045183219995), (0.33244488399729255, 0.4524636520475205), (0.11778991601260325, 0.6657734204021165), (0.9384303415747769, 0.2313873874340855)])     
 
