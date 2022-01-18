@@ -1,3 +1,4 @@
+from cProfile import label
 import copy
 import math
 from os import remove
@@ -282,7 +283,6 @@ class CS:
                     dgm_0.append(tuple((0,caras[j])))
                 if(len(caras[j])> 2 and low(matriz, j) != -1):
                     dgm_1.append(tuple((caras[low(matriz,j)],caras[j])))
-        print("hola\n",matriz)
         for j in range(len(matriz)):
             if(low(matriz, j) == -1 and len(caras[j]) == 1):
                 for i in range(len(matriz)):
@@ -302,9 +302,6 @@ class CS:
                             print(j)
                             print(low(matriz,i))
                             dgm_1.append(tuple((caras[low(matriz,j)], math.inf)))
-
-        print(dgm_0)
-        print(dgm_1)
         return [matriz, dgm_0, dgm_1]
 
 def low(matriz, j):
@@ -501,7 +498,6 @@ def puntos_persistencia(points):
         simplice_alpha.añadir(elem[0])
     #print(simplice_alpha.index)
     res_inc = simplice_alpha.alg_matricial()
-    print(res_inc[0])
     dgm_0 = res_inc[1]
     dgm_1 = res_inc[2]
     p_dgm0=[]
@@ -539,10 +535,9 @@ def puntos_persistencia(points):
        
     return[p_dgm0, p_dgm1, p_infinito]
 
-def diagrama_persistencia(lista):
-    plt.xlim(0, 1)
-    plt.ylim(0, 1)
-    print(lista[2])
+def diagrama_persistencia(lista): 
+    plt.xlim(0-0.015, 1)
+    plt.ylim(0-0.015, 1)
     max = 0
     for x in lista:
         for y in x:
@@ -552,17 +547,59 @@ def diagrama_persistencia(lista):
     max = max + max/3
     for x in lista[0]:
         plt.scatter(x[0], x[1],c = 'b')
+        if (x==lista[0][-1]):
+            plt.scatter(x[0], x[1],c = 'b', label='dgm\u2080')
     for x in lista[1]:
         plt.scatter(x[0], x[1], c ='r')
+        if (x==lista[1][-1]):
+            plt.scatter(x[0], x[1],c = 'r', label='dgm\u2081')
     for x in lista[2]:
         if(x == 0):
             plt.scatter(x, max, c ='b')
         if(x != 0):
             plt.scatter(x, max, c ='r')
 
-    plt.plot([0, max], [0, max], linestyle='--', c="gray")
+    plt.plot([0, max], [0, max], linestyle='--', c="gray", label='∞')
     plt.plot([0, max], [max, max], linestyle='--', c = "gray")
+    plt.title('Diagrama de Persistencia\n')
+    plt.xlabel('Birth Time')
+    plt.ylabel('Death Time')
+    plt.legend()
+
     plt.show()
+def codigo_barras(lista):
+
+    fig, (ax1, ax0)=plt.subplots(2)
+    lista1=[]
+    lista0=[]
+    for elem in lista[1]:
+        lista1.append(tuple(elem))
+    
+
+    for idx, (min_int1, max_int1) in enumerate(lista1):
+        ax1.hlines(y=idx, xmin=min_int1, xmax=max_int1, colors='red')
+    
+    for elem in lista[0]:
+        lista0.append(tuple(elem))
+    
+
+    for idx, (min_int0, max_int0) in enumerate(lista0):
+        ax0.hlines(y=idx, xmin=min_int0, xmax=max_int0+0.015, colors='blue')
+   
+    maxi=max(max_int0, max_int1)
+    for elem in lista[2]:
+        if elem == 0:
+            lista0.append(tuple((elem, maxi)))
+            for idx, (min_int0, max_int0) in enumerate(lista0):
+                if idx[-1]==tuple((elem, maxi)):
+                    ax0.hlines(y=idx, xmin=min_int0, xmax=max_int0+0.015, colors='blue')
+    for elem in lista[2]:
+        if elem != 0:
+            lista1.append(tuple((elem, maxi)))
+            for idx, (min_int1, max_int1) in enumerate(lista1):
+                if idx[-1]==tuple((elem, maxi)):
+                    ax1.hlines(y=idx, xmin=min_int1, xmax=max_int1+0.015, colors='red')
+        plt.show()
 
 simplice_prueba = CS()
 
@@ -862,6 +899,6 @@ tri = Delaunay(points)
 #DelaunayVoronoi(points)
 #AlphaComplex(points)
 
-
-diagrama_persistencia(puntos_persistencia(points))
+# diagrama_persistencia(puntos_persistencia(points))
+codigo_barras(puntos_persistencia(points))
 #plotSublevel(points, AlphaComplex(points), 0.26 )
