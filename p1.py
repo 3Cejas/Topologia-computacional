@@ -11,7 +11,6 @@ import matplotlib as mpl
 import numpy as np
 from matplotlib.patches import Polygon
 from itertools import combinations
-   
 class CS:
     def __init__(self):
         self.index = []
@@ -37,6 +36,10 @@ class CS:
         for elem in res:
             if len(elem) != 0 and elem not in resultado:
                 resultado.append(elem)
+        for l in resultado:
+                for elem in resultado:
+                    if(set(elem).issubset(set(l)) and len(elem) == len(l) and l != elem):
+                        resultado.remove(elem)
         return sorted(resultado, key=len)
 
     #def carasDim(self,dimensionDada):
@@ -147,7 +150,6 @@ class CS:
 
     def filtration(self, numero):
         return list(filter(lambda fil: menor_igual_que_peso(fil[1], numero),self.orden))
-
     def boundary_matrix(self,p):
         x = self.carasDim(p)
         y = self.carasDim(p-1)
@@ -223,8 +225,10 @@ class CS:
         aristas = 0
         vertices_activos = []
         caras_actuales = 0
+        it = 0
+        list_it = []
         for s in simplice:
-            if(len(s)== 1):
+            if(len(s)== 1): 
                 b_0 +=1
             if(len(s) == 2):
                 añadidos.append(s)
@@ -240,8 +244,11 @@ class CS:
                     b_0 -=1
             if(len(s) >= 3):
                 b_1 -=1
+            list_it.append([b_0, b_1])
+            it +=1
         print("b_0: ", b_0, "\nb_1: ", b_1)
-    
+        return [b_0, b_1, list_it]
+
     def general_boundary_matrix(self):
         simplices = self.caras()
         matriz = np.zeros((len(simplices), len(simplices)))
@@ -250,33 +257,64 @@ class CS:
                 if(set(l).issubset(set(s)) and len(l) == len(s)-1):
                     matriz[simplices.index(l)][simplices.index(s)] = 1
         return matriz
+    # def n_ch(self):
+    #     ps = self.dimension()
+    #     for p in range(ps):
+    #         for list_it in self.n_betti(p)[2]:
+    #             for i in range(len(list_it)):
+    #                 for j in range(len(list_it)):
+    #                     if(j > i):
+    #                         viven = (list_it[j-1][p] - list_it[i][p] - x ) - ( x- x)
+    #                         nacen =
 
-def reduce_column_if_necessary(R_t, V_t, i):
-    actual_low = low(R_t, i)
-    j = 0
-    while actual_low != -1 and j < i:
-        if low(R_t, j) == low(R_t, i):
-            R_t[i] = (R_t[i] + R_t[j])%2
-            V_t[i] = (V_t[i] + V_t[j])%2
-            j = 0 
-        j+=1
-    return R_t, V_t
-def alg_matricial(matriz):
-    assert len(matriz) > 0
-    R_t = copy.deepcopy(matriz)
-    numbers_of_columns = len(R_t)
-    V_t = np.zeros(numbers_of_columns)
-    for i in range(numbers_of_columns):
-        R_t, V_t = reduce_column_if_necessary(R_t, V_t, i)
-    return R_t, V_t
+    def alg_matricial(self):
+        matriz = self.general_boundary_matrix()
+        caras = self.caras()
+        dgm_0 = []
+        dgm_1 = []
+        flaglow = 0
+        for j in range(len(matriz)):
+            if(low(matriz, j) != -1):
+                for j_0 in reversed(range(j)):
+                    if low(matriz, j_0) == low(matriz, j) and j != j_0:
+                        matriz[:,j] = (matriz[:,j] + matriz[:,j_0])%2
+                if(len(caras[j]) == 2 and low(matriz, j) != -1):
+                    dgm_0.append(tuple((0,caras[j])))
+                if(len(caras[j])> 2 and low(matriz, j) != -1):
+                    dgm_1.append(tuple((caras[low(matriz,j)],caras[j])))
+        print("hola\n",matriz)
+        for j in range(len(matriz)):
+            if(low(matriz, j) == -1 and len(caras[j]) == 1):
+                for i in range(len(matriz)):
+                    if(low(matriz,i) == j):
+                        if( tuple((0, math.inf)) not in dgm_0):
+                            dgm_0.append(tuple((0, math.inf)))
+            if(low(matriz, j) == -1 and len(caras[j]) == 2):
+                flaglow = 0
+                for i in range(len(matriz)):
+                    if(low(matriz,i) == j):
+                          flaglow = 1 
+                if(flaglow == 0):
+                    if(tuple((caras[low(matriz,j)], math.inf)) not in dgm_1):
+                            print("caraaas")
+                            print(caras)
+                            print(caras[j])
+                            print(j)
+                            print(low(matriz,i))
+                            dgm_1.append(tuple((caras[low(matriz,j)], math.inf)))
+
+        print(dgm_0)
+        print(dgm_1)
+        return [matriz, dgm_0, dgm_1]
 
 def low(matriz, j):
     red_flag = 0
     for fila in reversed(range(len(matriz))):
+        
         if(matriz[fila][j] == 1 and red_flag == 0):
             red_flag = 1
             return fila
-
+    return -1
 def combinaciones(c, n):
     # Calcula y devuelve una lista con todas las
     # combinaciones posibles que se pueden hacer
@@ -454,23 +492,107 @@ def plotSublevel(points, alpha, radio):
         plt.pause(0.5)
     plt.show()
 
+def puntos_persistencia(points):
+    alpha = sorted(AlphaComplex(points), key=lambda tup: len(tup[0]))
+    simplice_alpha = CS()
+    for elem in alpha:
+        for num in elem[0]:
+            num = str(num)
+        simplice_alpha.añadir(elem[0])
+    #print(simplice_alpha.index)
+    res_inc = simplice_alpha.alg_matricial()
+    print(res_inc[0])
+    dgm_0 = res_inc[1]
+    dgm_1 = res_inc[2]
+    p_dgm0=[]
+    p_infinito = []
+    for elem in dgm_0:
+        if(elem[1] == math.inf):
+            p_infinito.append(elem[0])
+        p2=-1
+        encontrado = 0
+        for elem1 in alpha:
+            if (elem[1]==elem1[0] and encontrado == 0):
+                p2=elem1[1]
+                p_dgm0.append([0,p2])
+                encontrado = 1
+            
+    p_dgm1=[]
+    for elem in dgm_1:
+        p1=p2=-1
+        encontrado1 = 0
+        encontrado2 = 0
+        for elem1 in alpha:
+            if (elem[0]==elem1[0]):
+                p1=elem1[1]
+                encontrado1 = 1
+            if (elem[1]==elem1[0]):
+                p2=elem1[1]
+                encontrado2 = 1
+            if (p1 > 0 and p2 > 0 and encontrado1==1 and encontrado2 ==1):
+                p_dgm1.append([p1,p2])
+                encontrado1 = 0
+                encontrado2 = 0
+            if(elem[1] == math.inf):
+                if(elem[0] == elem1[0]):
+                    p_infinito.append(elem1[1])
+       
+    return[p_dgm0, p_dgm1, p_infinito]
+
+def diagrama_persistencia(lista):
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    print(lista[2])
+    max = 0
+    for x in lista:
+        for y in x:
+            if(x != lista[2]):
+                if(y[1] >= max):
+                    max = y[1]
+    max = max + max/3
+    for x in lista[0]:
+        plt.scatter(x[0], x[1],c = 'b')
+    for x in lista[1]:
+        plt.scatter(x[0], x[1], c ='r')
+    for x in lista[2]:
+        if(x == 0):
+            plt.scatter(x, max, c ='b')
+        if(x != 0):
+            plt.scatter(x, max, c ='r')
+
+    plt.plot([0, max], [0, max], linestyle='--', c="gray")
+    plt.plot([0, max], [max, max], linestyle='--', c = "gray")
+    plt.show()
 
 simplice_prueba = CS()
 
-#TETRAEDRO
-simplice_tetraedro = CS()
-simplice_tetraedro.añadir(["0", "1", "2", "3"])
+def test_tetraedro():
+    #TETRAEDRO
+    print("TEST TETRAEDRO")
+    simplice_tetraedro = CS()
+    simplice_tetraedro.añadir(["0", "1", "2", "3"])
 
-# print(simplice_tetraedro.n_betti(0))
-# print(simplice_tetraedro.n_betti(1))
-# print(simplice_tetraedro.n_betti(2))
-# print(simplice_tetraedro.n_betti(3))
-print(simplice_tetraedro.general_boundary_matrix())
-print(alg_matricial(simplice_tetraedro.general_boundary_matrix()))
+    # print(simplice_tetraedro.n_betti(0))
+    # print(simplice_tetraedro.n_betti(1))
+    # print(simplice_tetraedro.n_betti(2))
+    # print(simplice_tetraedro.n_betti(3))
+    # print(simplice_tetraedro.general_boundary_matrix())
+    #print(alg_matricial(simplice_tetraedro.general_boundary_matrix()))
+
+#test_tetraedro()
+simplice_alma = CS()
+simplice_alma.añadir(["0", "1", "3"])
+simplice_alma.añadir(["1", "3", "4"])
+simplice_alma.añadir(["1", "2", "4"])
+simplice_alma.añadir(["3", "4", "5"])
+# print(simplice_alma.general_boundary_matrix())
+#print(simplice_alma.n_betti(1))
+#simplice_alma.alg_matricial()
+
 #BORDE DEL TETRAEDRO
-simplice_tetraedro_borde = CS()
-for caras in simplice_tetraedro.carasDim(2):
-     simplice_tetraedro_borde.añadir(caras)
+# simplice_tetraedro_borde = CS()
+# for caras in simplice_tetraedro.carasDim(2):
+#      simplice_tetraedro_borde.añadir(caras)
 # simplice_tetraedro_borde.añadir(["0", "1"])
 # simplice_tetraedro_borde.añadir(["0", "2"])
 # simplice_tetraedro_borde.añadir(["0", "3"])
@@ -634,9 +756,9 @@ simplice_alg.añadir(["3", "4"])
 simplice_alg.añadir(["3", "5"])
 simplice_alg.añadir(["4", "5"])
 #print(simplice_alg.caras())
-simplice_alg.incremental()
-print(simplice_alg.n_betti(0))
-print(simplice_alg.n_betti(1))
+# simplice_alg.incremental()
+# print(simplice_alg.n_betti(0))
+# print(simplice_alg.n_betti(1))
 
 
 # simplice_prueba.añadir(["0", "1"])
@@ -738,5 +860,8 @@ vor=Voronoi(points)
 
 tri = Delaunay(points)
 #DelaunayVoronoi(points)
+#AlphaComplex(points)
 
+
+diagrama_persistencia(puntos_persistencia(points))
 #plotSublevel(points, AlphaComplex(points), 0.26 )
