@@ -496,7 +496,6 @@ def puntos_persistencia(points):
         for num in elem[0]:
             num = str(num)
         simplice_alpha.añadir(elem[0])
-    #print(simplice_alpha.index)
     res_inc = simplice_alpha.alg_matricial()
     dgm_0 = res_inc[1]
     dgm_1 = res_inc[2]
@@ -536,8 +535,6 @@ def puntos_persistencia(points):
     return[p_dgm0, p_dgm1, p_infinito]
 
 def diagrama_persistencia(lista): 
-    plt.xlim(0-0.015, 1)
-    plt.ylim(0-0.015, 1)
     max = 0
     for x in lista:
         for y in x:
@@ -545,6 +542,8 @@ def diagrama_persistencia(lista):
                 if(y[1] >= max):
                     max = y[1]
     max = max + max/3
+    plt.xlim(0-0.015, max+0.015)
+    plt.ylim(0-0.015, max+0.015)
     for x in lista[0]:
         plt.scatter(x[0], x[1],c = 'b')
         if (x==lista[0][-1]):
@@ -564,42 +563,47 @@ def diagrama_persistencia(lista):
     plt.title('Diagrama de Persistencia\n')
     plt.xlabel('Birth Time')
     plt.ylabel('Death Time')
-    plt.legend()
+    plt.legend(loc=4)
 
     plt.show()
 def codigo_barras(lista):
 
-    fig, (ax1, ax0)=plt.subplots(2)
+    fig1, (ax1, ax0)=plt.subplots(2)
     lista1=[]
     lista0=[]
+    fig1.suptitle('Código de Barras')
+    print(lista[1])
     for elem in lista[1]:
         lista1.append(tuple(elem))
-    
-
-    for idx, (min_int1, max_int1) in enumerate(lista1):
-        ax1.hlines(y=idx, xmin=min_int1, xmax=max_int1, colors='red')
-    
+    for idx1, (min_int1, max_int1) in enumerate(lista1):
+        ax1.hlines(y=idx1, xmin=min_int1, xmax=max_int1, colors='red')
+    ax1.set_ylabel('H\u2081')
+    ax0.set_ylabel('H\u2080')
+    ax1.get_yaxis().set_ticks([])
+    ax1.get_xaxis().set_ticks([])
+    ax0.get_yaxis().set_ticks([])
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['bottom'].set_visible(False)
+    ax1.spines['left'].set_visible(False)
+    ax0.spines['right'].set_visible(False)
+    ax0.spines['left'].set_visible(False)
     for elem in lista[0]:
         lista0.append(tuple(elem))
-    
+    for idx0, (min_int0, max_int0) in enumerate(lista0):
+        ax0.hlines(y=idx0, xmin=min_int0, xmax=max_int0, colors='blue')
 
-    for idx, (min_int0, max_int0) in enumerate(lista0):
-        ax0.hlines(y=idx, xmin=min_int0, xmax=max_int0+0.015, colors='blue')
-   
-    maxi=max(max_int0, max_int1)
+    maxi=max(max_int0, max_int1)+(max(max_int0, max_int1)/3)
     for elem in lista[2]:
         if elem == 0:
             lista0.append(tuple((elem, maxi)))
-            for idx, (min_int0, max_int0) in enumerate(lista0):
-                if idx[-1]==tuple((elem, maxi)):
-                    ax0.hlines(y=idx, xmin=min_int0, xmax=max_int0+0.015, colors='blue')
-    for elem in lista[2]:
+            ax0.hlines(y=idx0+1, xmin=min_int0, xmax=maxi, colors='blue')
         if elem != 0:
             lista1.append(tuple((elem, maxi)))
-            for idx, (min_int1, max_int1) in enumerate(lista1):
-                if idx[-1]==tuple((elem, maxi)):
-                    ax1.hlines(y=idx, xmin=min_int1, xmax=max_int1+0.015, colors='red')
-        plt.show()
+            ax1.hlines(y=idx1+1, xmin=min_int1, xmax=maxi, colors='red')
+    ax1.set_xlim(0,maxi)
+    ax0.set_xlim(0,maxi)
+    plt.show()
 
 simplice_prueba = CS()
 
@@ -899,6 +903,6 @@ tri = Delaunay(points)
 #DelaunayVoronoi(points)
 #AlphaComplex(points)
 
-# diagrama_persistencia(puntos_persistencia(points))
+diagrama_persistencia(puntos_persistencia(points))
 codigo_barras(puntos_persistencia(points))
 #plotSublevel(points, AlphaComplex(points), 0.26 )
