@@ -12,6 +12,7 @@ import matplotlib as mpl
 import numpy as np
 from matplotlib.patches import Polygon
 from itertools import combinations
+import random
 class CS:
     def __init__(self):
         self.index = []
@@ -43,15 +44,7 @@ class CS:
                         resultado.remove(elem)
         return sorted(resultado, key=len)
 
-    #def carasDim(self,dimensionDada):
-        #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
-        n=0
-        for i in self.index:
-            if (len(i) == dimensionDada):
-                n = n+1
-        return n
-        #return math.factorial(self.caras() - 1)/(math.factorial(dimensionDada)*math.factorial(self.caras()-dimensionDada -1))
-    
+ 
     def carasDim(self,dimensionDada):
         #Dado un k-simplice y una l-dimension: k+1!/((l+1!)(k-l!))
         caras = []
@@ -113,13 +106,9 @@ class CS:
         vertices = [item for t in (self.carasDim(0)) for item in t]
         actual = vertices[0]
         adyacencia = dict.fromkeys(vertices,[])
-        #print("inicio",adyacencia)
-        indice = 0
         for vertice in vertices:
             almacenador = []
             for tuples in aristas:
-                #print("mi vértice actual es:", vertice, "la arista actual es:", tuples)
-
                 if vertice == tuples[0]:
                     almacenador.append(tuples[1])
                 if vertice == tuples[1]:
@@ -129,7 +118,7 @@ class CS:
         visited = set()
         c_conexas = []
         #print("Following is the Depth-First Search")
-        #print(adyacencia)
+    
         for vertice in vertices:
             dfs(visited, adyacencia, vertice)
             if not(list(visited) in c_conexas): 
@@ -144,13 +133,13 @@ class CS:
         zipped = list(zip(lista,[numero]))
         self.añadir(zipped[0])
         self.orden.append(zipped[0])
-        self.orden = sorted(self.orden, key=lambda tup: tup[1])
-
         self.orden = sorted(self.orden, key=lambda tup: len(tup[0]))
+        self.orden = sorted(self.orden, key=lambda tup: tup[1])
         return 
 
     def filtration(self, numero):
         return list(filter(lambda fil: menor_igual_que_peso(fil[1], numero),self.orden))
+
     def boundary_matrix(self,p):
         x = self.carasDim(p)
         y = self.carasDim(p-1)
@@ -178,19 +167,20 @@ class CS:
         i = 0 #fila
         j = 0 #columna
         for i in range(min(len(y), len(x))):
-            j=i            
+            j=i       
+            #Elimina filas iguales    
             for m in range(len(y)):
                 for n in range (len(y)):
                     if ((M_delta[m][:] == M_delta[n][:]).all() and n > m and m >(i-1)):
                         M_delta[n][:] = (M_delta[n][:] + M_delta[n][:])%2
+            #Busca pivote en caso de no encontrar M_delta[i][j] == 1
             if (i < min(len(y), len(x)) and M_delta[i][j] != 1):
                 for n in range(len(x)):
                     if(n >= j):
                         for m in range(len(y)):
-                            if(M_delta[m][n] == 1 and M_delta[i][j] != 1 and m > i):
+                            if(M_delta[m][n] == 1 and M_delta[i][j] != 1 and m >= i and n>=j):
                                 M_delta[[m, i], : ] = M_delta[[i, m],: ]
-                            if(M_delta[i][j] != 1):
-                                M_delta[:,[n, j ]] = M_delta[:,[j, n] ]
+                                M_delta[:,[n, j]] = M_delta[:,[j, n] ]
 
             if (i < min(len(y), len(x)) and M_delta[i][j] == 1):
                 for m in range(len(y)):
@@ -210,18 +200,19 @@ class CS:
             if(N[i][i] == 1):
                 contador +=1
         dim_Z = len(x) -contador 
-        N = self.forma_smith(p+1)
-        x = self.carasDim(p+1)
-        y = self.carasDim(p)
+        Np = self.forma_smith(p+1)
+        xp = self.carasDim(p+1)
+        yp = self.carasDim(p)
         dim_B = 0
-        for i in range(min(len(y), len(x))):
-            if(N[i][i] == 1):
+        for i in range(min(len(yp), len(xp))):
+            if(Np[i][i] == 1):
                 dim_B+=1
         return (dim_Z - dim_B)
 
     def incremental(self):
         b_0 = b_1 = 0
-        añadidos = []
+        añadidos = CS()
+        # añadidos = []
         simplice = self.caras()
         aristas = 0
         vertices_activos = []
@@ -231,23 +222,28 @@ class CS:
         for s in simplice:
             if(len(s)== 1): 
                 b_0 +=1
+                añadidos.añadir(s)
             if(len(s) == 2):
-                añadidos.append(s)
-                if s[0] not in vertices_activos:
-                    vertices_activos.append(s[0])
-                if s[1] not in vertices_activos:
-                    vertices_activos.append(s[1])
-                aristas +=1
-                if((aristas-len(vertices_activos)+1)>caras_actuales):
-                    b_1 +=((aristas-len(vertices_activos)+1)-caras_actuales)
-                    caras_actuales = (aristas-len(vertices_activos)+1)
+                # añadidos.append(s)
+                # if s[0] not in vertices_activos:
+                #     vertices_activos.append(s[0])
+                # if s[1] not in vertices_activos:
+                #     vertices_activos.append(s[1])
+                # aristas +=1
+                # if((aristas-len(vertices_activos)+1)>caras_actuales):
+                #     b_1 += 1
+                #     caras_actuales = (aristas-len(vertices_activos)+1)
+                caras_actuales = añadidos.nConexo()
+                añadidos.añadir(s)
+                if(añadidos.nConexo()==caras_actuales):
+                    b_1+=1
                 else:
                     b_0 -=1
-            if(len(s) >= 3):
+            if(len(s) == 3):
+                añadidos.añadir(s)
                 b_1 -=1
             list_it.append([b_0, b_1])
-            it +=1
-        print("b_0: ", b_0, "\nb_1: ", b_1)
+            it +=1 
         return [b_0, b_1, list_it]
 
     def general_boundary_matrix(self):
@@ -258,15 +254,7 @@ class CS:
                 if(set(l).issubset(set(s)) and len(l) == len(s)-1):
                     matriz[simplices.index(l)][simplices.index(s)] = 1
         return matriz
-    # def n_ch(self):
-    #     ps = self.dimension()
-    #     for p in range(ps):
-    #         for list_it in self.n_betti(p)[2]:
-    #             for i in range(len(list_it)):
-    #                 for j in range(len(list_it)):
-    #                     if(j > i):
-    #                         viven = (list_it[j-1][p] - list_it[i][p] - x ) - ( x- x)
-    #                         nacen =
+
 
     def alg_matricial(self):
         matriz = self.general_boundary_matrix()
@@ -296,11 +284,6 @@ class CS:
                           flaglow = 1 
                 if(flaglow == 0):
                     if(tuple((caras[low(matriz,j)], math.inf)) not in dgm_1):
-                            print("caraaas")
-                            print(caras)
-                            print(caras[j])
-                            print(j)
-                            print(low(matriz,i))
                             dgm_1.append(tuple((caras[low(matriz,j)], math.inf)))
         return [matriz, dgm_0, dgm_1]
 
@@ -312,13 +295,6 @@ def low(matriz, j):
             red_flag = 1
             return fila
     return -1
-def combinaciones(c, n):
-    # Calcula y devuelve una lista con todas las
-    # combinaciones posibles que se pueden hacer
-    # con los elementos contenidos en c tomando n
-    # elementos a la vez.
-
-    return (s for s in potencia(c) if len(s) == n)
 
 def menor_igual_que_peso(numero, peso):
     return numero <= peso
@@ -330,78 +306,42 @@ def dfs(visited, graph, node):  #function for dfs
             dfs(visited, graph, neighbour)
 
 
-def potencia(c):
-    # Calcula y devuelve el conjunto potencia del 
-    # conjunto c.
-    
-    if len(c) == 0:
-        return [[]]
-    r = potencia(c[:-1])
-    return r + [s + [c[-1]] for s in r]
 
-def AlphaComplex(points):
-    tri = (Delaunay(points)).simplices
-    final = []
+def AlphaComplex(coordenadas):
+    tri = (Delaunay(coordenadas)).simplices
+    x=[]
+    triangulos = []
     for item in tri:
         x =[]
         for elem in item:
             x.append(str(elem))
-        final.append(tuple(x))
-    aristas=[]
-    for triangulo in tri:
-        for i in combinaciones(triangulo, 2):
-            aristas.append(i)
-    result = []
-    for elem in aristas:
-        if elem not in result:
-            result.append(elem)
-  
-    finissima = []
-    for aris in result:
-        if aris[0] > aris[1]:
-            temp = aris[0]
-            aris[0] = aris[1]
-            aris[1] = temp
-        if aris not in finissima:
-            finissima.append(tuple(aris))
-    sin_rep = []
-    for aris in finissima:
-        if aris not in sin_rep:
-            sin_rep.append(tuple(aris))
+        triangulos.append(tuple(x))
+    
+    alpha = CS()
+    for i in triangulos:
+        alpha.añadir(i)
 
-    ver = flat_list = [item for sublist in tri for item in sublist]
-    verint = []
-    for elem in ver:
-        verint.append(int(elem))
-    alpha = []
-    for elem in verint:
-        if elem not in alpha:
-            alpha.append(elem)
-    final = []
-    final_r = []
-    puntos_sin_tupla = sorted(alpha)
-    for elem in alpha:
-        elem = [elem]
-        elem_r = [tuple(elem), 0]
-        final.append(tuple(elem))
-        final_r.append(tuple(elem_r))
-    puntos_r = final_r
-    puntos = final
-    final = final +sin_rep
-    triana = []
-    for elem in tri:
-        triana.append(tuple(elem))
-    alpha = final
-    alpha =  alpha +triana
-    aris_peso=list(dis_aris(points, puntos,sin_rep).items())
+    alpha.caras()
+    puntos=[]
+    for elem in alpha.carasDim(0):
+        puntos.append(tuple([elem, 0]))
+    aristas = sorted(alpha.carasDim(1))
     puntos = sorted(puntos)
-    tris_peso = dis_tris(puntos_sin_tupla, points, triana)
+    aris_peso=list(dis_aris(coordenadas, sorted(alpha.carasDim(0)),aristas).items())
+    tris_peso = dis_tris(sorted(alpha.carasDim(0)), coordenadas, triangulos)
     union = []
-    union.extend(puntos_r)
+    union.extend(puntos)
     union.extend(aris_peso)
     union.extend(tris_peso)
     orden = sorted(union, key=lambda tup: tup[1])
-    return orden
+    ordenint=[]
+    for elem in orden:
+        temp=[]
+        for item in elem[0]:
+            temp.append(int(item[0]))
+        ordenint.append(tuple((tuple(temp),elem[1])))
+    ordenint = sorted(ordenint, key=lambda tup: tup[1])
+    return ordenint
 
 def circleRadius(b, c, d):
   temp = c[0]**2 + c[1]**2
@@ -426,10 +366,10 @@ def dis_tris(puntos_sin_tupla, points, triana):
     baricentros = {}
     radios = {}
     for triangulo in triana:
-        p1 = dicc_puntos_coord [triangulo[0]]
-        p2 = dicc_puntos_coord [triangulo[1]]
-        p3 = dicc_puntos_coord [triangulo[2]]
-
+        p1 = dicc_puntos_coord [tuple(triangulo[0])]
+        p2 = dicc_puntos_coord [tuple(triangulo[1])]
+        p3 = dicc_puntos_coord [tuple(triangulo[2])]
+        
         x=(p1[0]+p2[0]+p3[0])/3
         y=(p1[1]+p2[1]+p3[1])/3
         baricentros[triangulo] = [x,y]
@@ -438,7 +378,6 @@ def dis_tris(puntos_sin_tupla, points, triana):
 
     return tris_peso
 def dis_aris(points, puntos, aristas):
-    puntos = sorted(puntos)
     distancias = []
     for arista in aristas:
         punto1 = [arista[0]]
@@ -473,7 +412,7 @@ def DelaunayVoronoi(points):
 
 def plotSublevel(points, alpha, radio):
     sublevel_sin_puntos = []
-    for elem in sublevel(alpha, 0.26):
+    for elem in sublevel(alpha, radio):
         if len(elem) > 1:
             sublevel_sin_puntos.append(elem)
 
@@ -488,6 +427,13 @@ def plotSublevel(points, alpha, radio):
             plt.plot([points[elem[0]][0], points[elem[1]][0]], [points[elem[0]][1], points[elem[1]][1]], 'black')
         plt.pause(0.5)
     plt.show()
+
+def VR(points, radio):
+    alpha=AlphaComplex(points)
+    sublevel_sin_puntos = []
+    for elem in sublevel(alpha, radio):
+        sublevel_sin_puntos.append(elem) 
+    return sublevel_sin_puntos
 
 def puntos_persistencia(points):
     alpha = sorted(AlphaComplex(points), key=lambda tup: len(tup[0]))
@@ -536,6 +482,7 @@ def puntos_persistencia(points):
 
 def diagrama_persistencia(lista): 
     max = 0
+    fig=plt.gcf()
     for x in lista:
         for y in x:
             if(x != lista[2]):
@@ -560,34 +507,26 @@ def diagrama_persistencia(lista):
 
     plt.plot([0, max], [0, max], linestyle='--', c="gray", label='∞')
     plt.plot([0, max], [max, max], linestyle='--', c = "gray")
+    fig.canvas.set_window_title('Diagrama de Persistencia')
     plt.title('Diagrama de Persistencia\n')
     plt.xlabel('Birth Time')
     plt.ylabel('Death Time')
     plt.legend(loc=4)
 
     plt.show()
+
 def codigo_barras(lista):
 
     fig1, (ax1, ax0)=plt.subplots(2)
     lista1=[]
     lista0=[]
     fig1.suptitle('Código de Barras')
-    print(lista[1])
+    fig1.canvas.set_window_title('Código de Barras')
     for elem in lista[1]:
         lista1.append(tuple(elem))
     for idx1, (min_int1, max_int1) in enumerate(lista1):
         ax1.hlines(y=idx1, xmin=min_int1, xmax=max_int1, colors='red')
-    ax1.set_ylabel('H\u2081')
-    ax0.set_ylabel('H\u2080')
-    ax1.get_yaxis().set_ticks([])
-    ax1.get_xaxis().set_ticks([])
-    ax0.get_yaxis().set_ticks([])
-    ax1.spines['top'].set_visible(False)
-    ax1.spines['right'].set_visible(False)
-    ax1.spines['bottom'].set_visible(False)
-    ax1.spines['left'].set_visible(False)
-    ax0.spines['right'].set_visible(False)
-    ax0.spines['left'].set_visible(False)
+    
     for elem in lista[0]:
         lista0.append(tuple(elem))
     for idx0, (min_int0, max_int0) in enumerate(lista0):
@@ -601,26 +540,146 @@ def codigo_barras(lista):
         if elem != 0:
             lista1.append(tuple((elem, maxi)))
             ax1.hlines(y=idx1+1, xmin=min_int1, xmax=maxi, colors='red')
+
+    ax1.set_ylabel('H\u2081')
+    ax0.set_ylabel('H\u2080')
+    ax1.get_yaxis().set_ticks([])
+    ax1.get_xaxis().set_ticks([])
+    ax0.get_yaxis().set_ticks([])
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['bottom'].set_visible(False)
+    ax1.spines['left'].set_visible(False)
+    ax0.spines['right'].set_visible(False)
+    ax0.spines['left'].set_visible(False)
     ax1.set_xlim(0,maxi)
     ax0.set_xlim(0,maxi)
     plt.show()
 
 simplice_prueba = CS()
+def delete_random_elems(input_list1, input_list2, n):
+    rd = random.sample(range(len(input_list1)), n)
+    to_delete = set(rd)
+    return [[x for i,x in enumerate(input_list1) if not i in to_delete], [x for i,x in enumerate(input_list2) if not i in to_delete]]
 
-def test_tetraedro():
-    #TETRAEDRO
-    print("TEST TETRAEDRO")
-    simplice_tetraedro = CS()
-    simplice_tetraedro.añadir(["0", "1", "2", "3"])
+def circulo(t, x, y):
+    x.append(2 * math.cos(t))
+    y.append(2 * math.sin(t))
 
-    # print(simplice_tetraedro.n_betti(0))
-    # print(simplice_tetraedro.n_betti(1))
-    # print(simplice_tetraedro.n_betti(2))
-    # print(simplice_tetraedro.n_betti(3))
-    # print(simplice_tetraedro.general_boundary_matrix())
-    #print(alg_matricial(simplice_tetraedro.general_boundary_matrix()))
+def elipse(t, x, y):
+    x.append(2 * math.cos(t))
+    y.append(9 * math.sin(t))
 
-#test_tetraedro()
+def ocho(t, x, y):
+    x.append(2 * math.sin(t))
+    y.append(2 * math.sin(t)*math.cos(t))
+
+
+def crear_nubes_puntos_circulo():
+    x = []
+    y = []
+
+    for i in range(0, 99):
+        circulo(i,x,y)
+
+    res = delete_random_elems(x, y, 70)
+
+    n_res_x = []
+
+    n_res_y = []
+
+    for elem in res[0]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_x.append(elem)
+
+    for elem in res[1]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_y.append(elem)
+
+    return np.array(list(zip(n_res_x, n_res_y)))
+
+def crear_nubes_puntos_elipse():
+    x = []
+    y = []
+
+    for i in range(0, 99):
+        elipse(i,x,y)
+        
+    res = delete_random_elems(x, y, 70)
+
+    n_res_x = []
+
+    n_res_y = []
+
+    for elem in res[0]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_x.append(elem)
+
+    for elem in res[1]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_y.append(elem)
+
+    return np.array(list(zip(n_res_x, n_res_y)))
+
+def crear_nubes_puntos_ocho():
+    x = []
+    y = []
+
+    for i in range(0, 99):
+        ocho(i,x,y)
+
+    res = delete_random_elems(x, y, 70)
+
+    n_res_x = []
+
+    n_res_y = []
+
+    for elem in res[0]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_x.append(elem)
+
+    for elem in res[1]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_y.append(elem)
+
+    return np.array(list(zip(n_res_x, n_res_y)))
+
+points = crear_nubes_puntos_ocho()
+
+def crear_nubes_puntos_circulo():
+    x = []
+    y = []
+
+    for i in range(0, 99):
+        circulo(i,x,y)
+
+    res = delete_random_elems(x, y, 70)
+
+    n_res_x = []
+    n_res_y = []
+
+    for elem in res[0]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_x.append(elem)
+
+    for elem in res[1]:
+        elem = elem + random.uniform(-0.25, 0.25)
+        n_res_y.append(elem)
+
+    return np.array(list(zip(n_res_x, n_res_y)))
+#TETRAEDRO
+# print("TEST TETRAEDRO")
+simplice_tetraedro = CS()
+simplice_tetraedro.añadir(["0", "1", "2", "3"])
+
+# print(simplice_tetraedro.n_betti(0))
+# print(simplice_tetraedro.n_betti(1))
+# print(simplice_tetraedro.n_betti(2))
+# print(simplice_tetraedro.n_betti(3))
+# print(simplice_tetraedro.general_boundary_matrix())
+#print(alg_matricial(simplice_tetraedro.general_boundary_matrix()))
+
+
 simplice_alma = CS()
 simplice_alma.añadir(["0", "1", "3"])
 simplice_alma.añadir(["1", "3", "4"])
@@ -634,12 +693,6 @@ simplice_alma.añadir(["3", "4", "5"])
 # simplice_tetraedro_borde = CS()
 # for caras in simplice_tetraedro.carasDim(2):
 #      simplice_tetraedro_borde.añadir(caras)
-# simplice_tetraedro_borde.añadir(["0", "1"])
-# simplice_tetraedro_borde.añadir(["0", "2"])
-# simplice_tetraedro_borde.añadir(["0", "3"])
-# simplice_tetraedro_borde.añadir(["1", "2"])
-# simplice_tetraedro_borde.añadir(["1", "3"])
-# simplice_tetraedro_borde.añadir(["2", "3"])
 
 # print(simplice_tetraedro_borde.n_betti(0))
 # print(simplice_tetraedro_borde.n_betti(1))
@@ -667,34 +720,32 @@ simplice_toro1.añadir(["2", "3", "9"])
 simplice_toro1.añadir(["3", "7", "9"])
 simplice_toro1.añadir(["1", "3", "7"])
 
-# simplice_toro1.incremental()
 # print(simplice_toro1.n_betti(0))
 # print(simplice_toro1.n_betti(1))
 
 
 
 simplice_toro2 = CS()
-# for caras in simplice_toro1.carasDim(1):
-#     simplice_toro2.añadir(caras)
-
-simplice_toro2.añadir(["0", "1", "5"])
-simplice_toro2.añadir(["0", "3", "5"])
-simplice_toro2.añadir(["1", "2", "5"])
-simplice_toro2.añadir(["2", "5", "6"])
-simplice_toro2.añadir(["0", "2", "6"])
-simplice_toro2.añadir(["0", "3", "6"])
-simplice_toro2.añadir(["3", "4", "5"])
-simplice_toro2.añadir(["4", "5", "7"])
-simplice_toro2.añadir(["5", "6", "7"])
-simplice_toro2.añadir(["6", "7", "8"])
-simplice_toro2.añadir(["3", "6", "8"])
-simplice_toro2.añadir(["3", "4", "8"])
-simplice_toro2.añadir(["0", "4", "7"])
-simplice_toro2.añadir(["0", "1", "7"])
-simplice_toro2.añadir(["1", "7", "8"])
-simplice_toro2.añadir(["1", "2", "8"])
-simplice_toro2.añadir(["0", "4", "8"])
-simplice_toro2.añadir(["0", "2", "8"])
+for caras in simplice_toro1.carasDim(1):
+     simplice_toro2.añadir(caras)
+# simplice_toro2.añadir(["0", "1", "5"])
+# simplice_toro2.añadir(["0", "3", "5"])
+# simplice_toro2.añadir(["1", "2", "5"])
+# simplice_toro2.añadir(["2", "5", "6"])
+# simplice_toro2.añadir(["0", "2", "6"])
+# simplice_toro2.añadir(["0", "3", "6"])
+# simplice_toro2.añadir(["3", "4", "5"])
+# simplice_toro2.añadir(["4", "5", "7"])
+# simplice_toro2.añadir(["5", "6", "7"])
+# simplice_toro2.añadir(["6", "7", "8"])
+# simplice_toro2.añadir(["3", "6", "8"])
+# simplice_toro2.añadir(["3", "4", "8"])
+# simplice_toro2.añadir(["0", "4", "7"])
+# simplice_toro2.añadir(["0", "1", "7"])
+# simplice_toro2.añadir(["1", "7", "8"])
+# simplice_toro2.añadir(["1", "2", "8"])
+# simplice_toro2.añadir(["0", "4", "8"])
+# simplice_toro2.añadir(["0", "2", "8"])
 
 # print(simplice_toro2.n_betti(0))
 # print(simplice_toro2.n_betti(1))
@@ -763,8 +814,64 @@ simplice_anillo.añadir(["3", "5", "6"])
 
 simplice_asno = CS()
 
+simplice_asno.añadir(["0", "2", "5"])
+simplice_asno.añadir(["0", "5", "6"])
+simplice_asno.añadir(["0", "2", "6"])
+simplice_asno.añadir(["1", "2", "5"])
+simplice_asno.añadir(["1", "3", "5"])
+simplice_asno.añadir(["3", "5", "6"])
+simplice_asno.añadir(["3", "4", "6"])
+simplice_asno.añadir(["4", "6", "7"])
+simplice_asno.añadir(["1", "6", "7"])
+simplice_asno.añadir(["1", "2", "6"])
+simplice_asno.añadir(["0", "1", "3"])
+simplice_asno.añadir(["0", "3", "4"])
+simplice_asno.añadir(["0", "1", "4"])
+simplice_asno.añadir(["1", "2", "4"])
+simplice_asno.añadir(["2", "4", "7"])
+simplice_asno.añadir(["0", "2", "7"])
+simplice_asno.añadir(["0", "1", "7"])
 
+# print(simplice_asno.n_betti(0))
+# print(simplice_asno.n_betti(1))
+# print(simplice_asno.n_betti(2))
 
+# DOBLE TORO
+
+simplice_dobletoro = CS()
+
+simplice_dobletoro.añadir(["1", "2", "3"])
+simplice_dobletoro.añadir(["1", "3", "7"])
+simplice_dobletoro.añadir(["3", "7", "11"])
+simplice_dobletoro.añadir(["3", "9", "11"])
+simplice_dobletoro.añadir(["9", "10", "11"])
+simplice_dobletoro.añadir(["2", "3", "4"])
+simplice_dobletoro.añadir(["2", "4", "8"])
+simplice_dobletoro.añadir(["0", "4", "8"])
+simplice_dobletoro.añadir(["0", "4", "10"])
+simplice_dobletoro.añadir(["0", "6", "8"])
+simplice_dobletoro.añadir(["6", "7", "8"])
+simplice_dobletoro.añadir(["5", "6", "7"])
+simplice_dobletoro.añadir(["5", "7", "11"])
+simplice_dobletoro.añadir(["4", "5", "6"])
+simplice_dobletoro.añadir(["0", "10", "11"])
+simplice_dobletoro.añadir(["0", "1", "11"])
+simplice_dobletoro.añadir(["0", "1", "2"])
+simplice_dobletoro.añadir(["0", "2", "6"])
+simplice_dobletoro.añadir(["2", "6", "10"])
+simplice_dobletoro.añadir(["4", "6", "10"])
+simplice_dobletoro.añadir(["0", "4", "8"])
+simplice_dobletoro.añadir(["1", "5", "11"])
+simplice_dobletoro.añadir(["2", "8", "10"])
+simplice_dobletoro.añadir(["8", "9", "10"])
+simplice_dobletoro.añadir(["3", "4", "5"])
+simplice_dobletoro.añadir(["3", "5", "9"])
+simplice_dobletoro.añadir(["1", "5", "9"])
+simplice_dobletoro.añadir(["1", "2", "9"])
+simplice_dobletoro.añadir(["7", "8", "9"])
+# print(simplice_dobletoro.n_betti(0))
+# print(simplice_dobletoro.n_betti(1))
+# print(simplice_dobletoro.n_betti(2))
 # Del complejo simplicial de la transparencia 4 del documento Homología Simplicial II.
 
 simplice_hs2t4 = CS()
@@ -781,8 +888,6 @@ simplice_hs2t4.añadir(["8", "9"])
 # print(simplice_hs2t4.n_betti(2))
 # print(simplice_hs2t4.n_betti(3))
 
-# Del doble toro.
-
 
 # De algunos alfa complejos.
 
@@ -797,7 +902,8 @@ simplice_alg.añadir(["3", "4"])
 simplice_alg.añadir(["3", "5"])
 simplice_alg.añadir(["4", "5"])
 #print(simplice_alg.caras())
-# simplice_alg.incremental()
+# print(simplice_alg.incremental()[0])
+# print(simplice_alg.incremental()[1])
 # print(simplice_alg.n_betti(0))
 # print(simplice_alg.n_betti(1))
 
@@ -810,6 +916,13 @@ simplice_alg.añadir(["4", "5"])
 # simplice_prueba.añadir(["6", "7", "8"])
 # simplice_prueba.añadir(["8", "9"])
 
+# simplice_prueba = CS()
+# simplice_prueba.añadir(["0", "1"])
+# simplice_prueba.añadir(["1", "2", "3", "4"])
+# simplice_prueba.añadir(["4", "5"])
+# simplice_prueba.añadir(["5", "6"])
+# simplice_prueba.añadir(["4", "6"])
+# print(simplice_prueba.cEuler())
 
 # print(simplice_prueba.index)
 # print(simplice_prueba.caras())
@@ -871,12 +984,13 @@ simplice_alg.añadir(["4", "5"])
 # simplice_prueba6.añadir([("0", "1")])
 
 
-# simplice_pruebapeso = CS()
+simplice_pruebapeso = CS()
 
-# simplice_pruebapeso.insert([("0", "1")], 2.0)
-# simplice_pruebapeso.insert([("0",)], 2.0)
-# simplice_pruebapeso.insert([("1",)], 10.0)
-# simplice_pruebapeso.insert([("1", "2")], 10.0)
+simplice_pruebapeso.insert([("0", "1")], 2.0)
+simplice_pruebapeso.insert([("0",)], 2.0)
+simplice_pruebapeso.insert([("1",)], 10.0)
+simplice_pruebapeso.insert([("1", "2")], 10.0)
+# print(simplice_pruebapeso.orden)
 
 # print(simplice_pruebapeso.filtration(9.0))
 
@@ -890,19 +1004,63 @@ simplice_alg1.añadir(["4", "6"])
 simplice_alg1.añadir(["3", "4"])
 simplice_alg1.añadir(["6", "7", "8"])
 #print(simplice_alg.caras())
-# simplice_alg1.incremental()
+# print(simplice_alg1.incremental()[0])
+# print(simplice_alg1.incremental()[1])
 # print(simplice_alg1.n_betti(0))
 # print(simplice_alg1.n_betti(1))
 
-points=np.array([(0.38021546727456423, 0.46419202339598786), (0.7951628297672293, 0.49263630135869474), (0.566623772375203, 0.038325621649018426), (0.3369306814864865, 0.7103735061134965), (0.08272837815822842, 0.2263273314352896), (0.5180166301873989, 0.6271769943824689), (0.33691411899985035, 0.8402045183219995), (0.33244488399729255, 0.4524636520475205), (0.11778991601260325, 0.6657734204021165), (0.9384303415747769, 0.2313873874340855)])     
+points=np.array([(0.38021546727456423, 0.46419202339598786), 
+(0.7951628297672293, 0.49263630135869474), 
+(0.566623772375203, 0.038325621649018426), 
+(0.3369306814864865, 0.7103735061134965), 
+(0.08272837815822842, 0.2263273314352896), 
+(0.5180166301873989, 0.6271769943824689), 
+(0.33691411899985035, 0.8402045183219995), 
+(0.33244488399729255, 0.4524636520475205), 
+(0.11778991601260325, 0.6657734204021165), 
+(0.9384303415747769, 0.2313873874340855)])     
 
 
 vor=Voronoi(points)
 
 tri = Delaunay(points)
-#DelaunayVoronoi(points)
-#AlphaComplex(points)
+# DelaunayVoronoi(points)
+# diagrama_persistencia(puntos_persistencia(points))
+# codigo_barras(puntos_persistencia(points))
+# plotSublevel(points, AlphaComplex(points), 0.26 )
+points2=np.array([[0.8957641450573793, 0.2950833519989374],
+[0.028621391963087994, 0.9440875759025237],
+[0.517621505875702, 0.1236620161847416],
+[0.7871047164191424, 0.7777474116014623],
+[0.21869796914805273, 0.7233589914276723],
+[0.9891035292480995, 0.6032186214942837],
+[0.30113764052453484, 0.613321425324272],
+[0.18407448222466916, 0.7868606964403773],
+[0.4496777667376678, 0.874366215574117],
+[0.08225571534539433, 0.616710205071694]])
+simplice_points = CS()
+for elem in AlphaComplex(points):
+    simplice_points.añadir(elem[0])
+simplice_points2 = CS()
+for elem in AlphaComplex(points2):
+    simplice_points2.añadir(elem[0])
+# print(simplice_points.index)
 
-diagrama_persistencia(puntos_persistencia(points))
-codigo_barras(puntos_persistencia(points))
-#plotSublevel(points, AlphaComplex(points), 0.26 )
+# print("Números de Betti de la primera nube de puntos vista en la práctica 2 mediante algoritmo incremental:")
+# print("\u03B2\u2080:",simplice_points.incremental()[0])
+# print("\u03B2\u2081:",simplice_points.incremental()[1],"\n")
+# print("Números de Betti mediante función n_betti:")
+# print("\u03B2\u2080:",simplice_points.n_betti(0))
+# print("\u03B2\u2081:",simplice_points.n_betti(1))
+
+# print("\u03B2\u2080:",simplice_points2.incremental()[0])
+# print("\u03B2\u2081:",simplice_points2.incremental()[1],"\n")
+# print("Números de Betti mediante función n_betti:")
+# print("\u03B2\u2080:",simplice_points2.n_betti(0))
+# print("\u03B2\u2081:",simplice_points2.n_betti(1))
+
+points_circulo = crear_nubes_puntos_circulo()
+print("Puntos de persistencia del círculo:\n")
+print("dgm\u2080: ", puntos_persistencia(points_circulo)[0],"\n")
+print("dgm\u2081: ", puntos_persistencia(points_circulo)[1],"\n")
+print("Índices del infinito: ", puntos_persistencia(points_circulo)[2],"\n")
